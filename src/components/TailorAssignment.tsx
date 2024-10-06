@@ -125,17 +125,10 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {alert && (
-        <Alert
-          message={alert.message}
-          type={alert.type}
-          onClose={() => setAlert(null)}
-        />
-      )}
+    <div className="container mx-auto px-4">
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Tailor Assignments</h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl font-bold">Tailor Assignments</h2>
           <input
             type="date"
             value={newDate}
@@ -148,14 +141,21 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
           >
             Add New Date
           </button>
-          <button
-            onClick={saveTailorCounts}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Save Assignments
-          </button>
         </div>
+        <button
+          onClick={saveTailorCounts}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Save Assignments
+        </button>
       </div>
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert(null)}
+        />
+      )}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={handlePreviousDates}
@@ -173,34 +173,38 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-            <tr>
-              <th className="py-3 px-6 text-left">Buyer</th>
-              {displayedDates.map(date => (
-                <th key={date} className="py-3 px-6 text-center">{format(parseISO(date), 'dd/MM/yyyy')}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {buyerTailorCounts.map((count, index) => (
-              <tr key={count.buyer} className="border-b border-gray-200 hover:bg-gray-100">
-                <td className="py-3 px-6 text-left whitespace-nowrap">{count.buyer}</td>
+        <div className="max-h-[calc(100vh-178px)] overflow-y-auto"> {/* Changed from 250px to 178px */}
+          <table className="min-w-full bg-white table-fixed">
+            <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal sticky top-0 z-10">
+              <tr>
+                <th className="w-1/6 py-3 px-2 text-left sticky left-0 bg-gray-200 z-20">Buyer</th>
                 {displayedDates.map(date => (
-                  <td key={date} className="py-3 px-6 text-center">
-                    <input
-                      type="number"
-                      min="0"
-                      value={count.tailorCounts[date] || 0}
-                      onChange={(e) => handleCountChange(index, date, e.target.value)}
-                      className="w-16 text-center border rounded-md"
-                    />
-                  </td>
+                  <th key={date} className="w-1/9 py-3 px-1 text-center text-xs">
+                    {format(parseISO(date), 'dd/MM/yy')}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="text-gray-600 text-sm font-light">
+              {buyerTailorCounts.map((count, index) => (
+                <tr key={count.buyer} className="border-b border-gray-200 hover:bg-gray-100">
+                  <td className="py-3 px-2 text-left whitespace-nowrap sticky left-0 bg-white">{count.buyer}</td>
+                  {displayedDates.map(date => (
+                    <td key={date} className="py-3 px-1 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        value={count.tailorCounts[date] || 0}
+                        onChange={(e) => handleCountChange(index, date, e.target.value)}
+                        className="w-full text-center border rounded-md p-1"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

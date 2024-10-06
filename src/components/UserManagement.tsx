@@ -6,6 +6,7 @@ import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'fireb
 import { getAuth, createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { app } from '../lib/firebase/firebase'; // Import the Firebase app instance
 import Link from 'next/link';
+import { Home } from 'lucide-react'; // Import the Home icon
 
 interface User {
   id: string;
@@ -154,8 +155,12 @@ export default function UserManagement() {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Link href="/" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-          Back to Home
+        <Link 
+          href="/" 
+          className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors duration-200"
+          title="Back to Home"
+        >
+          <Home size={24} />
         </Link>
       </div>
       {error && (
@@ -198,21 +203,21 @@ export default function UserManagement() {
             className="p-2 border rounded"
             required
           />
-          <select
-            value={newUser.team}
-            onChange={(e) => setNewUser({ ...newUser, team: e.target.value })}
-            className="p-2 border rounded"
-            required
-          >
-            <option value="">Select Team</option>
-            {TEAMS.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
-            ))}
-          </select>
-          <div className="col-span-2">
-            <label className="flex items-center">
+          <div className="flex items-center space-x-4">
+            <select
+              value={newUser.team}
+              onChange={(e) => setNewUser({ ...newUser, team: e.target.value })}
+              className="p-2 border rounded w-40" // Changed from flex-grow to w-40
+              required
+            >
+              <option value="">Select Team</option>
+              {TEAMS.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
+            <label className="flex items-center flex-grow"> {/* Added flex-grow here */}
               <input
                 type="checkbox"
                 checked={newUser.isAdmin}
@@ -228,115 +233,119 @@ export default function UserManagement() {
         </button>
       </form>
       <h2 className="text-xl font-semibold mb-2">User List</h2>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 text-left">Email</th>
-            <th className="p-2 text-left">First Name</th>
-            <th className="p-2 text-left">Last Name</th>
-            <th className="p-2 text-left">Team</th>
-            <th className="p-2 text-left">Admin</th>
-            <th className="p-2 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id} className="border-b">
-              {editingUser && editingUser.id === user.id ? (
-                <>
-                  <td className="p-2">
-                    <input
-                      type="email"
-                      value={editingUser.email}
-                      onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                      className="w-full p-1 border rounded"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editingUser.firstName}
-                      onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
-                      className="w-full p-1 border rounded"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editingUser.lastName}
-                      onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
-                      className="w-full p-1 border rounded"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <select
-                      value={editingUser.team}
-                      onChange={(e) => setEditingUser({ ...editingUser, team: e.target.value })}
-                      className="w-full p-1 border rounded"
-                    >
-                      {TEAMS.map((team) => (
-                        <option key={team} value={team}>
-                          {team}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="checkbox"
-                      checked={editingUser.isAdmin}
-                      onChange={(e) => setEditingUser({ ...editingUser, isAdmin: e.target.checked })}
-                    />
-                  </td>
-                  <td className="p-2">
-                    <input
-                      type="password"
-                      placeholder="New Password (optional)"
-                      value={editingUser.newPassword || ''}
-                      onChange={(e) => setEditingUser({ ...editingUser, newPassword: e.target.value })}
-                      className="w-full p-1 border rounded mb-2"
-                    />
-                    <button
-                      onClick={handleUpdateUser}
-                      className="bg-green-500 text-white px-2 py-1 rounded mr-2"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingUser(null)}
-                      className="bg-gray-500 text-white px-2 py-1 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="p-2">{user.email}</td>
-                  <td className="p-2">{user.firstName}</td>
-                  <td className="p-2">{user.lastName}</td>
-                  <td className="p-2">{user.team}</td>
-                  <td className="p-2">{user.isAdmin ? 'Yes' : 'No'}</td>
-                  <td className="p-2">
-                    <button
-                      onClick={() => startEditing(user)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-200 sticky top-0 z-10">
+              <tr>
+                <th className="p-2 text-left">Email</th>
+                <th className="p-2 text-left">First Name</th>
+                <th className="p-2 text-left">Last Name</th>
+                <th className="p-2 text-left">Team</th>
+                <th className="p-2 text-left">Admin</th>
+                <th className="p-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} className="border-b">
+                  {editingUser && editingUser.id === user.id ? (
+                    <>
+                      <td className="p-2">
+                        <input
+                          type="email"
+                          value={editingUser.email}
+                          onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                          className="w-full p-1 border rounded"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          value={editingUser.firstName}
+                          onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
+                          className="w-full p-1 border rounded"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          value={editingUser.lastName}
+                          onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
+                          className="w-full p-1 border rounded"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <select
+                          value={editingUser.team}
+                          onChange={(e) => setEditingUser({ ...editingUser, team: e.target.value })}
+                          className="w-full p-1 border rounded"
+                        >
+                          {TEAMS.map((team) => (
+                            <option key={team} value={team}>
+                              {team}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="checkbox"
+                          checked={editingUser.isAdmin}
+                          onChange={(e) => setEditingUser({ ...editingUser, isAdmin: e.target.checked })}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="password"
+                          placeholder="New Password (optional)"
+                          value={editingUser.newPassword || ''}
+                          onChange={(e) => setEditingUser({ ...editingUser, newPassword: e.target.value })}
+                          className="w-full p-1 border rounded mb-2"
+                        />
+                        <button
+                          onClick={handleUpdateUser}
+                          className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingUser(null)}
+                          className="bg-gray-500 text-white px-2 py-1 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="p-2">{user.email}</td>
+                      <td className="p-2">{user.firstName}</td>
+                      <td className="p-2">{user.lastName}</td>
+                      <td className="p-2">{user.team}</td>
+                      <td className="p-2">{user.isAdmin ? 'Yes' : 'No'}</td>
+                      <td className="p-2">
+                        <button
+                          onClick={() => startEditing(user)}
+                          className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

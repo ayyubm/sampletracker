@@ -4,8 +4,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  updateProfile, 
-  signInWithEmailAndPassword
+  updateProfile,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import {
   collection,
@@ -15,7 +15,7 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
-  setDoc
+  setDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -39,15 +39,19 @@ export const addDocument = async (collectionName: string, data: any) => {
   return docRef.id;
 };
 
-export const getDocuments = async (collectionName: string) => {
+export const getDocuments = async <T>(collectionName: string): Promise<T[]> => {
   const querySnapshot = await getDocs(collection(db, collectionName));
-  return querySnapshot.docs.map(doc => ({
+  return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data()
+    ...(doc.data() as T),
   }));
 };
 
-export const updateDocument = async (collection: string, id: string, data: any) => {
+export const updateDocument = async (
+  collection: string,
+  id: string,
+  data: any,
+) => {
   const docRef = doc(db, collection, id);
   await setDoc(docRef, data, { merge: true });
 };
@@ -62,7 +66,10 @@ export const uploadFile = async (file: File, path: string) => {
   return getDownloadURL(storageRef);
 };
 
-export const getDocument = async (collectionName: string, documentId: string) => {
+export const getDocument = async (
+  collectionName: string,
+  documentId: string,
+) => {
   try {
     const docRef = doc(db, collectionName, documentId);
     const docSnap = await getDoc(docRef);
@@ -70,10 +77,10 @@ export const getDocument = async (collectionName: string, documentId: string) =>
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     } else {
-      throw new Error('No such document!');
+      throw new Error("No such document!");
     }
   } catch (error) {
-    console.error('Error getting document:', error);
+    console.error("Error getting document:", error);
     throw error;
   }
 };
@@ -97,7 +104,11 @@ export async function createUser(userData: UserData, adminUser: any) {
     if (currentUser) await auth.signOut();
 
     // Create the new user
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
     const newUser = userCredential.user;
 
     // Update the new user's profile
@@ -106,7 +117,7 @@ export async function createUser(userData: UserData, adminUser: any) {
     });
 
     // Store additional user data in Firestore
-    await setDoc(doc(db, 'users', newUser.uid), {
+    await setDoc(doc(db, "users", newUser.uid), {
       firstName,
       lastName,
       email,
@@ -118,14 +129,22 @@ export async function createUser(userData: UserData, adminUser: any) {
 
     // Sign the admin back in if there was a user before
     if (currentUser && adminUser) {
-      await signInWithEmailAndPassword(auth, adminUser.email, adminUser.password);
+      await signInWithEmailAndPassword(
+        auth,
+        adminUser.email,
+        adminUser.password,
+      );
     }
 
     return { uid: newUser.uid, email: newUser.email };
   } catch (error) {
     // If any error occurs, ensure we sign the admin back in
     if (currentUser && adminUser) {
-      await signInWithEmailAndPassword(auth, adminUser.email, adminUser.password);
+      await signInWithEmailAndPassword(
+        auth,
+        adminUser.email,
+        adminUser.password,
+      );
     }
     throw error;
   }

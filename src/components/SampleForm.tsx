@@ -5,11 +5,57 @@ import { addDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS } from '../lib/constants';
 
+interface Sample {
+  id: string;
+  sampleId: string;
+  timestamp: string;
+  status: string;
+  samplePriorityNo: string;
+  patternNo: string; // New field
+  sampleRequestDate: string;
+  buyer: string;
+  style: string;
+  season: string;
+  typeOfSample: string;
+  color: string; // New field
+  noOfPieces: string;
+  typeOfFabric: string;
+  requiredFabricQty: string;
+  procuredFabricQty: string;
+  stockFabricQty: string;
+  fabricIssueDate: string;
+  fabricReceiptDate: string;
+  requiredCompletionDate: string;
+  expectedCompletionDate: string;
+  actualCompletionDate: string;
+  cutQty: string;
+  shipQty: string;
+  rejectQty: string;
+  alterQty: string;
+  changeTracking: {
+    [key: string]: ChangeInfo;
+  };
+}
+
+interface DuplicateSample {
+  samplePriorityNo: string;
+  patternNo: string;
+  sampleRequestDate: string;
+  buyer: string;
+  style: string;
+  season: string;
+  typeOfSample: string;
+  color: string;
+  noOfPieces: string;
+  typeOfFabric: string;
+  requiredFabricQty: string;
+  requiredCompletionDate: string;
+}
 
 interface SampleFormProps {
   onClose: () => void;
   onSampleAdded: () => void;
-  duplicateSample?: Sample | null;
+  duplicateSample?: DuplicateSample | null;
 }
 
 interface ChangeInfo {
@@ -18,7 +64,7 @@ interface ChangeInfo {
 }
 
 async function generateSampleId(): Promise<string> {
-  const samples = await getDocuments('samples');
+  const samples: Sample[] = await getDocuments('samples');
   const maxId = samples.reduce((max, sample) => {
     if (sample.sampleId && typeof sample.sampleId === 'string') {
       const parts = sample.sampleId.split('-');

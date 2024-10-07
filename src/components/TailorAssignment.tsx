@@ -39,7 +39,6 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   const fetchTailorCounts = async () => {
     try {
       const fetchedCounts = await getDocuments('tailorAssignments');
-      console.log('Fetched counts:', fetchedCounts);
       if (fetchedCounts.length === 0) {
         const initialCounts = BUYER_OPTIONS.map(buyer => ({
           buyer,

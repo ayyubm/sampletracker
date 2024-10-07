@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
       console.error('Error updating password:', error);
-      res.status(500).json({ message: 'Error updating password', error: error.message });
+      const errorMessage = (error as Error).message;
+      res.status(500).json({ message: 'Error updating password', error: errorMessage });
     }
   } else {
     res.setHeader('Allow', ['POST']);

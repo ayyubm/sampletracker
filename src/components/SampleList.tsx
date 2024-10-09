@@ -265,13 +265,15 @@ const SampleList: React.FC<SampleListProps> = ({
 
   const filteredStyles = useMemo(() => {
     const uniqueStyles = Array.from(
-      new Set(samples.map((sample) => sample.style)),
+      new Set(samples.map((sample) => sample.style || ''))
     );
     return uniqueStyles
       .filter((style) =>
-        style.toLowerCase().includes(styleSearch.toLowerCase()),
+        style && styleSearch
+          ? style.toLowerCase().includes(styleSearch.toLowerCase())
+          : true
       )
-      .sort((a, b) => a.localeCompare(b));
+      .sort((a, b) => (a && b ? a.localeCompare(b) : 0));
   }, [samples, styleSearch]);
 
   const FilterDropdown = ({
@@ -798,73 +800,81 @@ const SampleList: React.FC<SampleListProps> = ({
               </tr>
             </thead>
             <tbody className="text-gray-600 text-sm font-light">
-              {filteredSamples.map((sample) => (
-                <tr
-                  key={sample.id}
-                  className="border-b border-gray-200 hover:bg-gray-50"
-                >
-                  <td className="py-3 px-6 text-left whitespace-nowrap sticky left-0 bg-white">
-                    {sample.sampleId}
-                  </td>
-                  <td className="py-3 px-6 text-left">
-                    {formatTimestamp(sample.timestamp)}
-                  </td>
-                  {[
-                    "status",
-                    "samplePriorityNo",
-                    "patternNo", // Include patternNo here
-                    "sampleRequestDate",
-                    "buyer",
-                    "style",
-                    "season",
-                    "typeOfSample",
-                    "typeOfFabric",
-                    "color", // Include color here
-                    "noOfPieces",
-                    "requiredFabricQty",
-                    "procuredFabricQty",
-                    "stockFabricQty",
-                    "fabricIssueDate",
-                    "fabricReceiptDate",
-                    "requiredCompletionDate",
-                    "expectedCompletionDate",
-                    "actualCompletionDate",
-                    "cutQty",
-                    "shipQty",
-                    "rejectQty",
-                    "alterQty",
-                  ].map((field) => (
-                    <td key={field} className="py-3 px-6 text-left">
-                      {renderCell(sample, field)}
+              {filteredSamples.length > 0 ? (
+                filteredSamples.map((sample) => (
+                  <tr
+                    key={sample.id}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-6 text-left whitespace-nowrap sticky left-0 bg-white">
+                      {sample.sampleId}
                     </td>
-                  ))}
-                  <td className="py-3 px-6 text-center sticky right-0 bg-white">
-                    <div className="flex justify-center items-center space-x-2">
-                      <button
-                        onClick={() => setSelectedSample(sample.id)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Edit"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDuplicate(sample)}
-                        className="text-green-600 hover:text-green-900"
-                        title="Duplicate"
-                      >
-                        <Copy size={18} />
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(e, sample.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    <td className="py-3 px-6 text-left">
+                      {formatTimestamp(sample.timestamp)}
+                    </td>
+                    {[
+                      "status",
+                      "samplePriorityNo",
+                      "patternNo", // Include patternNo here
+                      "sampleRequestDate",
+                      "buyer",
+                      "style",
+                      "season",
+                      "typeOfSample",
+                      "typeOfFabric",
+                      "color", // Include color here
+                      "noOfPieces",
+                      "requiredFabricQty",
+                      "procuredFabricQty",
+                      "stockFabricQty",
+                      "fabricIssueDate",
+                      "fabricReceiptDate",
+                      "requiredCompletionDate",
+                      "expectedCompletionDate",
+                      "actualCompletionDate",
+                      "cutQty",
+                      "shipQty",
+                      "rejectQty",
+                      "alterQty",
+                    ].map((field) => (
+                      <td key={field} className="py-3 px-6 text-left">
+                        {renderCell(sample, field)}
+                      </td>
+                    ))}
+                    <td className="py-3 px-6 text-center sticky right-0 bg-white">
+                      <div className="flex justify-center items-center space-x-2">
+                        <button
+                          onClick={() => setSelectedSample(sample.id)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(sample)}
+                          className="text-green-600 hover:text-green-900"
+                          title="Duplicate"
+                        >
+                          <Copy size={18} />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, sample.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={25} className="py-4 text-center">
+                    No samples available. Please add new samples.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

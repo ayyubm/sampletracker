@@ -3,7 +3,7 @@ import { BUYER_OPTIONS } from '../lib/constants';
 import { getDocuments, updateDocument, addDocument } from '../lib/firebase/firebaseUtils';
 import { format, parseISO, isBefore, addDays, subDays } from 'date-fns';
 import Alert from './Alert';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'; // Add Trash2 icon
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 interface TailorCount {
   [date: string]: number;
@@ -194,7 +194,6 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
     <div className="container mx-auto px-4">
       <div className="mb-4 flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-bold">Tailor Assignments</h2>
           <input
             type="date"
             value={newDate}
@@ -207,13 +206,13 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
           >
             Add New Date
           </button>
+          <button
+            onClick={saveTailorCounts}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Save Assignments
+          </button>
         </div>
-        <button
-          onClick={saveTailorCounts}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Save Assignments
-        </button>
       </div>
       {alert && (
         <Alert
@@ -287,12 +286,12 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
       </div>
       
       {/* Debug information */}
-      <div className="mt-4 p-4 bg-gray-100 rounded">
+      {/* <div className="mt-4 p-4 bg-gray-100 rounded">
         <h3 className="font-bold">Debug Info:</h3>
         <p>Buyer Count: {buyerTailorCounts.length}</p>
         <p>All Dates: {allDates.join(', ')}</p>
         <p>Displayed Dates: {displayedDates.join(', ')}</p>
-      </div>
+      </div> */}
     </div>
   );
 };

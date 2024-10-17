@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { addDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS } from '../lib/constants';
+import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
 
 interface Sample {
   id: string;
@@ -12,26 +12,27 @@ interface Sample {
   status: string;
   samplePriorityNo: string;
   patternNo: string; // New field
-  sampleRequestDate: string;
+  patternStatus: string;
+  buyerRequestDate: string;
   buyer: string;
   style: string;
   season: string;
   typeOfSample: string;
   color: string; // New field
-  noOfPieces: string;
+  noOfPieces: number;
   typeOfFabric: string;
-  requiredFabricQty: string;
-  procuredFabricQty: string;
-  stockFabricQty: string;
+  requiredFabricQty: number;
+  procuredFabricQty: number;
+  stockFabricQty: number;
   fabricIssueDate: string;
-  fabricReceiptDate: string;
+  fabricTrimsReceiptDate: string;
   requiredCompletionDate: string;
   expectedCompletionDate: string;
-  actualCompletionDate: string;
-  cutQty: string;
-  shipQty: string;
-  rejectQty: string;
-  alterQty: string;
+  actualSampleReceivedDate: string;
+  cutQty: number;
+  shipQty: number;
+  rejectQty: number;
+  alterQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
@@ -40,15 +41,16 @@ interface Sample {
 interface DuplicateSample {
   samplePriorityNo: string;
   patternNo: string;
-  sampleRequestDate: string;
+  patternStatus: string;
+  buyerRequestDate: string;
   buyer: string;
   style: string;
   season: string;
   typeOfSample: string;
   color: string;
-  noOfPieces: string;
+  noOfPieces: number;
   typeOfFabric: string;
-  requiredFabricQty: string;
+  requiredFabricQty: number;
   requiredCompletionDate: string;
 }
 
@@ -85,15 +87,16 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     status: 'New',
     samplePriorityNo: '',
     patternNo: '',
-    sampleRequestDate: '',
+    patternStatus: '', // Add this line
+    buyerRequestDate: '',
     buyer: '',
     style: '',
     season: '',
     typeOfSample: '',
-    noOfPieces: '',
+    noOfPieces: 0,
     typeOfFabric: '',
     color: '',
-    requiredFabricQty: '',
+    requiredFabricQty: 0,
     requiredCompletionDate: '',
   });
   const [loading, setLoading] = useState(true);
@@ -110,7 +113,8 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             status: 'New',
             samplePriorityNo: duplicateSample.samplePriorityNo,
             patternNo: duplicateSample.patternNo,
-            sampleRequestDate: duplicateSample.sampleRequestDate,
+            patternStatus: duplicateSample.patternStatus,
+            buyerRequestDate: duplicateSample.buyerRequestDate,
             buyer: duplicateSample.buyer,
             style: duplicateSample.style,
             season: duplicateSample.season,
@@ -166,6 +170,10 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
+  };
+
   if (loading) {
     return <div className="text-center mt-8">Loading...</div>;
   }
@@ -213,12 +221,27 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="sampleRequestDate" className="block text-sm font-medium text-gray-700">Sample Request Date</label>
+            <label htmlFor="patternStatus" className="block text-sm font-medium text-gray-700">Pattern Status</label>
+            <select
+              name="patternStatus"
+              id="patternStatus"
+              value={formData.patternStatus}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            >
+              <option value="">Select pattern status</option>
+              {PATTERN_STATUS_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="buyerRequestDate" className="block text-sm font-medium text-gray-700">Buyer Request Date</label>
             <input
               type="date"
-              name="sampleRequestDate"
-              id="sampleRequestDate"
-              value={formData.sampleRequestDate}
+              name="buyerRequestDate"
+              id="buyerRequestDate"
+              value={formData.buyerRequestDate}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
@@ -287,11 +310,13 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
           <div className="mb-4">
             <label htmlFor="noOfPieces" className="block text-sm font-medium text-gray-700">No. of Pieces</label>
             <input
-              type="text"
+              type="number"
+              min="0"
               name="noOfPieces"
               id="noOfPieces"
               value={formData.noOfPieces}
               onChange={handleChange}
+              onWheel={handleWheel}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
@@ -322,11 +347,13 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
           <div className="mb-4">
             <label htmlFor="requiredFabricQty" className="block text-sm font-medium text-gray-700">Required Fabric Qty</label>
             <input
-              type="text"
+              type="number"
+              min="0"
               name="requiredFabricQty"
               id="requiredFabricQty"
               value={formData.requiredFabricQty}
               onChange={handleChange}
+              onWheel={handleWheel}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
@@ -342,7 +369,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
-          </div>
+          </div>          
         </form>
         <div className="mt-4 flex justify-end">
           <button

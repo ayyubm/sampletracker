@@ -4,13 +4,15 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
 import SampleList from './SampleList';
 import SampleForm from './SampleForm';
-import Link from 'next/link';
+import Sidebar from './Sidebar';
+import { Menu } from 'lucide-react';
 
 export default function Dashboard() {
-  const { userData, signOut } = useAuth();
+  const { userData } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [clearFiltersFlag, setClearFiltersFlag] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleSampleAdded = useCallback(() => {
     setShowForm(false);
@@ -27,30 +29,24 @@ export default function Dashboard() {
     setTimeout(() => setClearFiltersFlag(false), 100);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <header className="flex justify-between items-center p-4">
-        <h1 className="text-2xl font-bold">Garment Sample Tracker</h1>
         <div className="flex items-center">
-          <span className="mr-4">
-            Welcome, {userData?.firstName || 'User'}
-            {userData?.isAdmin && <span className="ml-2 text-sm text-green-500">(Admin)</span>}
-          </span>
-          <Link href="/assign-tailors" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2">
-            Assign Tailors
-          </Link>
-          {userData?.isAdmin && (
-            <Link href="/user-management" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2">
-              User Management
-            </Link>
-          )}
-          <button
-            onClick={signOut}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Sign Out
+          <button onClick={toggleSidebar} className="mr-4">
+            <Menu size={24} />
           </button>
+          <h1 className="text-2xl font-bold">Garment Sample Tracker</h1>
         </div>
+        <span className="mr-4">
+          Welcome, {userData?.firstName || 'User'}
+          {userData?.isAdmin && <span className="ml-2 text-sm text-green-500">(Admin)</span>}
+        </span>
       </header>
       <div className="flex justify-between items-center px-4 py-2">
         <button

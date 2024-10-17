@@ -45,10 +45,11 @@ export const SAMPLE_TYPE_OPTIONS = [
   'TOP',
   'AD/PHOTOSHOOT',
   'DESIGN SAMPLE',
-  'SHIPMENT/PULL'
+  'SHIPMENT/PULL',
+  'MEETING SAMPLE'
 ];
 
-export const STATUS_OPTIONS = ['New', 'Under Cutting', 'Cutting Ready', 'Under Sewing', 'Sewing Ready', 
+export const STATUS_OPTIONS = ['New', 'Fabric Under Washing', 'Under Cutting', 'Cutting Ready', 'Under Sewing', 'Sewing Ready', 
   'Under Finishing', 'Under Washing', 'Under Ebellishment', 'QA Review', 'Garment Ready', 'Dispatched'];
 
 export const SEASON_OPTIONS = [
@@ -57,3 +58,5 @@ export const SEASON_OPTIONS = [
   'H1-24', 'Resort-24', 'Summer 24', 'H2-24', 'FA-24', 'Trans-24', 'FW-24','BTS-24', 'HOLIDAY-24',
   'FH-24', 'Winter 2024', 'T FALL2024'
 ];
+
+export const PATTERN_STATUS_OPTIONS = ['New', 'Under Correction', 'Awaiting Confirmation', 'Awaiting Block', 'Awaiting Shrinkage Report', 'Pattern Ready'];

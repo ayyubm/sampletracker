@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getDocument, updateDocument } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS } from '../lib/constants';
+import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
 
 
 interface SampleDetailsProps {
@@ -24,29 +24,36 @@ interface SampleData {
   status: string;
   samplePriorityNo: string;
   patternNo: string;
-  sampleRequestDate: string;
+  patternStatus: string;
+  buyerRequestDate: string;
   buyer: string;
   style: string;
   season: string;
   typeOfSample: string;
   color: string;
-  noOfPieces: string;
+  noOfPieces: number;
   typeOfFabric: string;
-  requiredFabricQty: string;
-  procuredFabricQty: string;
-  stockFabricQty: string;
+  requiredFabricQty: number;
+  procuredFabricQty: number;
+  stockFabricQty: number;
   fabricIssueDate: string;
-  fabricReceiptDate: string;
+  fabricTrimsReceiptDate: string;
+  fabricRejectQty: number; // Add this line
   requiredCompletionDate: string;
   expectedCompletionDate: string;
-  actualCompletionDate: string;
-  cutQty: string;
-  shipQty: string;
-  rejectQty: string;
-  alterQty: string;
+  actualSampleReceivedDate: string;
+  cutQty: number;
+  alterQty: number;
+  rejectQty: number;
+  shipQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
+  remarks: {
+    text: string;
+    timestamp: string;
+    user: string;
+  }[];
 }
 
 const defaultSampleData: SampleData = {
@@ -55,27 +62,30 @@ const defaultSampleData: SampleData = {
   status: 'New',
   samplePriorityNo: '',
   patternNo: '',
-  sampleRequestDate: '',
+  patternStatus: 'New',
+  buyerRequestDate: '',
   buyer: '',
   style: '',
   season: '',
   typeOfSample: '',
   color: '',
-  noOfPieces: '',
+  noOfPieces: 0,
   typeOfFabric: '',
-  requiredFabricQty: '',
-  procuredFabricQty: '',
-  stockFabricQty: '',
+  requiredFabricQty: 0,
+  procuredFabricQty: 0,
+  stockFabricQty: 0,
   fabricIssueDate: '',
-  fabricReceiptDate: '',
+  fabricTrimsReceiptDate: '',
+  fabricRejectQty: 0, // Add this line
   requiredCompletionDate: '',
   expectedCompletionDate: '',
-  actualCompletionDate: '',
-  cutQty: '',
-  shipQty: '',
-  rejectQty: '',
-  alterQty: '',
+  actualSampleReceivedDate: '',
+  cutQty: 0,
+  alterQty: 0,
+  rejectQty: 0,
+  shipQty: 0,
   changeTracking: {},
+  remarks: [],
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -96,7 +106,6 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
       setError(null);
       try {
         const fetchedSample = await getDocument('samples', sampleId);
-        // Remove the 'id' field from the fetched sample
         const { id, ...sampleWithoutId } = fetchedSample;
         const sampleData = { ...defaultSampleData, ...sampleWithoutId };
         setSample(sampleData);
@@ -154,7 +163,8 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'status',
     'samplePriorityNo',
     'patternNo',
-    'sampleRequestDate',
+    'patternStatus',
+    'buyerRequestDate',
     'buyer',
     'style',
     'season',
@@ -166,15 +176,20 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'procuredFabricQty',
     'stockFabricQty',
     'fabricIssueDate',
-    'fabricReceiptDate',
+    'fabricTrimsReceiptDate',
+    'fabricRejectQty', // Add this line
     'requiredCompletionDate',
     'expectedCompletionDate',
-    'actualCompletionDate',
+    'actualSampleReceivedDate',
     'cutQty',
-    'shipQty',
+    'alterQty',
     'rejectQty',
-    'alterQty'
+    'shipQty',
   ];
+
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
+  };
 
   if (loading) return <div className="text-center mt-8">Loading sample details...</div>;
   if (error) return <div className="text-center mt-8 text-red-600">{error}</div>;
@@ -182,17 +197,28 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Edit Sample</h3>
+      <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Sample Details</h3>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           {fieldOrder.map((key) => {
             const value = sample[key as keyof SampleData];
             return (
               <div key={key} className="mb-4">
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  {key === 'fabricRejectQty' ? 'Fabric Reject Qty' : key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </label>
-                {key === 'timestamp' ? (
+                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'cutQty' || key === 'shipQty' || key === 'rejectQty' || key === 'alterQty' || key === 'requiredFabricQty' || key === 'procuredFabricQty' || key === 'stockFabricQty' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    name={key}
+                    id={key}
+                    value={value as string}
+                    onChange={handleChange}
+                    onWheel={handleWheel}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                  />
+                ) : key === 'timestamp' ? (
                   <input
                     type="text"
                     name={key}
@@ -264,6 +290,22 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                       </option>
                     ))}
                   </select>
+                ) : key === 'patternStatus' ? (
+                  <select
+                    name={key}
+                    id={key}
+                    value={value as string}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    required
+                  >
+                    <option value="">Select pattern status</option>
+                    {PATTERN_STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     type={key.includes('Date') ? 'date' : 'text'}
@@ -297,6 +339,25 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
             </button>
           </div>
         </form>
+
+        {/* Add this new section for remarks */}
+        <div className="mt-6">
+          <h4 className="text-md font-medium leading-6 text-gray-900 mb-2">Remarks</h4>
+          <div className="max-h-40 overflow-y-auto mb-4 border rounded p-2">
+            {sample.remarks && sample.remarks.length > 0 ? (
+              sample.remarks.map((remark: any, index: number) => (
+                <div key={index} className="mb-2 p-2 bg-gray-100 rounded">
+                  <p className="text-sm">{remark.text}</p>
+                  <p className="text-xs text-gray-500">
+                    By {remark.user} on {new Date(remark.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No remarks yet.</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

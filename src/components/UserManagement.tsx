@@ -7,6 +7,8 @@ import { getAuth, createUserWithEmailAndPassword, deleteUser } from 'firebase/au
 import { app } from '../lib/firebase/firebase'; // Import the Firebase app instance
 import Link from 'next/link';
 import { Home } from 'lucide-react'; // Import the Home icon
+import { Menu } from 'lucide-react'; // Import the Menu icon
+import Sidebar from './Sidebar'; // Import the Sidebar component
 
 interface User {
   id: string;
@@ -27,7 +29,7 @@ interface EditingUser extends User {
 
 const TEAMS = ['Merchandising', 'Sampling', 'Fabric', 'Trims', 'Warehouse', 'Management', 'Admin'];
 
-export default function UserManagement() {
+const UserManagement: React.FC = () => {
   const { userData } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState<NewUser>({
@@ -40,6 +42,7 @@ export default function UserManagement() {
   });
   const [editingUser, setEditingUser] = useState<EditingUser | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Initialize Firestore
   const db = getFirestore(app);
@@ -151,17 +154,18 @@ export default function UserManagement() {
     return <div>You do not have permission to access this page.</div>;
   }
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-6">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="flex items-center mb-4">
+        <button onClick={toggleSidebar} className="mr-4">
+          <Menu size={24} />
+        </button>
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Link 
-          href="/" 
-          className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors duration-200"
-          title="Back to Home"
-        >
-          <Home size={24} />
-        </Link>
       </div>
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -348,4 +352,6 @@ export default function UserManagement() {
       </div>
     </div>
   );
-}
+};
+
+export default UserManagement;

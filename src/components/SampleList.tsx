@@ -14,9 +14,11 @@ import {
   SAMPLE_TYPE_OPTIONS,
   STATUS_OPTIONS,
   SEASON_OPTIONS,
+  PATTERN_STATUS_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
-import { Edit, Copy, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare } from "lucide-react";
+import RemarkModal from "./RemarkModal";
 
 interface ChangeInfo {
   name: string;
@@ -30,29 +32,32 @@ interface Sample {
   status: string;
   samplePriorityNo: string;
   patternNo: string; // New field
-  sampleRequestDate: string;
+  patternStatus: string;
+  buyerRequestDate: string;
   buyer: string;
   style: string;
   season: string;
   typeOfSample: string;
   color: string; // New field
-  noOfPieces: string;
+  noOfPieces: number;
   typeOfFabric: string;
-  requiredFabricQty: string;
-  procuredFabricQty: string;
-  stockFabricQty: string;
+  requiredFabricQty: number;
+  procuredFabricQty: number;
+  stockFabricQty: number;
   fabricIssueDate: string;
-  fabricReceiptDate: string;
+  fabricTrimsReceiptDate: string;
+  fabricRejectQty: number; // Add this line
   requiredCompletionDate: string;
   expectedCompletionDate: string;
-  actualCompletionDate: string;
-  cutQty: string;
-  shipQty: string;
-  rejectQty: string;
-  alterQty: string;
+  actualSampleReceivedDate: string;
+  cutQty: number;
+  alterQty: number;
+  rejectQty: number;
+  shipQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
+  remarks: string[];
 }
 
 interface SampleListProps {
@@ -109,7 +114,8 @@ const SampleList: React.FC<SampleListProps> = ({
     buyer: "",
     typeOfSample: "",
     status: "",
-    style: "", // Add style to filters
+    style: "",
+    patternStatus: "", // Add this line
   });
   const [styleSearch, setStyleSearch] = useState("");
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
@@ -140,6 +146,8 @@ const SampleList: React.FC<SampleListProps> = ({
     direction: "asc",
   });
 
+  const [selectedSampleForRemarks, setSelectedSampleForRemarks] = useState<string | null>(null);
+
   const fetchSamples = useCallback(async () => {
     const fetchedSamples = await getDocuments("samples");
     setSamples(fetchedSamples as Sample[]);
@@ -157,7 +165,8 @@ const SampleList: React.FC<SampleListProps> = ({
           (filters.typeOfSample === "" ||
             sample.typeOfSample === filters.typeOfSample) &&
           (filters.status === "" || sample.status === filters.status) &&
-          (filters.style === "" || sample.style === filters.style)
+          (filters.style === "" || sample.style === filters.style) &&
+          (filters.patternStatus === "" || sample.patternStatus === filters.patternStatus) // Add this line
         );
       })
       .sort((a, b) => {
@@ -205,6 +214,7 @@ const SampleList: React.FC<SampleListProps> = ({
         typeOfSample: "",
         status: "",
         style: "",
+        patternStatus: "",
       });
       setStyleSearch("");
     }
@@ -325,6 +335,7 @@ const SampleList: React.FC<SampleListProps> = ({
       typeOfSample: "",
       status: "",
       style: "",
+      patternStatus: "", // Add this line
     });
   };
 
@@ -332,7 +343,7 @@ const SampleList: React.FC<SampleListProps> = ({
     const editableFields = [
       "status",
       "samplePriorityNo",
-      "sampleRequestDate",
+      "buyerRequestDate",
       "buyer",
       "style",
       "season",
@@ -343,16 +354,18 @@ const SampleList: React.FC<SampleListProps> = ({
       "procuredFabricQty",
       "stockFabricQty",
       "fabricIssueDate",
-      "fabricReceiptDate",
+      "fabricTrimsReceiptDate",
       "requiredCompletionDate",
       "expectedCompletionDate",
-      "actualCompletionDate",
+      "actualSampleReceivedDate",
       "cutQty",
-      "shipQty",
-      "rejectQty",
       "alterQty",
+      "rejectQty",
+      "shipQty",
       "patternNo",
-      "color", // Add patternNo and color to editable fields
+      "color",
+      "patternStatus",
+      "fabricRejectQty",
     ];
 
     if (editableFields.includes(field)) {
@@ -379,6 +392,10 @@ const SampleList: React.FC<SampleListProps> = ({
     } else if (e.key === "Escape") {
       setEditingCell(null);
     }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
   };
 
   const saveCellEdit = async () => {
@@ -502,6 +519,36 @@ const SampleList: React.FC<SampleListProps> = ({
             autoFocus
           />
         );
+      } else if (field === 'patternStatus') {
+        return (
+          <select
+            value={editValue}
+            onChange={handleCellChange}
+            onBlur={handleCellBlur}
+            onKeyDown={handleCellKeyDown}
+            className="w-full p-1 border rounded"
+            autoFocus
+          >
+            <option value="">Select pattern status</option>
+            {PATTERN_STATUS_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        );
+      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'cutQty' || field === 'shipQty' || field === 'rejectQty' || field === 'alterQty' || field === 'requiredFabricQty' || field === 'procuredFabricQty' || field === 'stockFabricQty') {
+        return (
+          <input
+            type="number"
+            min="0"
+            value={editValue}
+            onChange={handleCellChange}
+            onBlur={handleCellBlur}
+            onKeyDown={handleCellKeyDown}
+            onWheel={handleWheel}
+            className="w-full p-1 border rounded"
+            autoFocus
+          />
+        );
       } else {
         return (
           <input
@@ -520,12 +567,12 @@ const SampleList: React.FC<SampleListProps> = ({
       if (field === "timestamp") {
         return formatTimestamp(value as string);
       } else if (
-        field === "sampleRequestDate" ||
+        field === "buyerRequestDate" ||
         field === "fabricIssueDate" ||
-        field === "fabricReceiptDate" ||
+        field === "fabricTrimsReceiptDate" ||
         field === "requiredCompletionDate" ||
         field === "expectedCompletionDate" ||
-        field === "actualCompletionDate"
+        field === "actualSampleReceivedDate"
       ) {
         return (
           <div
@@ -635,6 +682,10 @@ const SampleList: React.FC<SampleListProps> = ({
     }));
   };
 
+  const handleRemarkClick = (sampleId: string) => {
+    setSelectedSampleForRemarks(sampleId);
+  };
+
   return (
     <div className="h-full overflow-hidden">
       <div className="overflow-x-auto h-full">
@@ -672,11 +723,20 @@ const SampleList: React.FC<SampleListProps> = ({
                 <th className="py-3 px-6 text-left">Pattern No.</th>
                 <th className="py-3 px-6 text-left">
                   <button
-                    onClick={() => handleSort("sampleRequestDate")}
+                    onClick={(e) => handleFilterClick("patternStatus", e)}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Sample Request Date
-                    {sortConfig.key === "sampleRequestDate" &&
+                    Pattern Status {filters.patternStatus && `(${filters.patternStatus})`}
+                    <ChevronDownIcon />
+                  </button>
+                </th>
+                <th className="py-3 px-6 text-left">
+                  <button
+                    onClick={() => handleSort("buyerRequestDate")}
+                    className="font-bold hover:text-gray-900 flex items-center"
+                  >
+                    Buyer Request Date
+                    {sortConfig.key === "buyerRequestDate" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp size={40} />
                       ) : (
@@ -736,11 +796,11 @@ const SampleList: React.FC<SampleListProps> = ({
                 </th>
                 <th className="py-3 px-6 text-left">
                   <button
-                    onClick={() => handleSort("fabricReceiptDate")}
+                    onClick={() => handleSort("fabricTrimsReceiptDate")}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Fabric Receipt Date
-                    {sortConfig.key === "fabricReceiptDate" &&
+                    Fabric and Trims Receipt Date
+                    {sortConfig.key === "fabricTrimsReceiptDate" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp size={40} className="ml-1" />
                       ) : (
@@ -748,6 +808,7 @@ const SampleList: React.FC<SampleListProps> = ({
                       ))}
                   </button>
                 </th>
+                <th className="py-3 px-6 text-left">Fabric Reject Qty</th>
                 <th className="py-3 px-6 text-left">
                   <button
                     onClick={() => handleSort("requiredCompletionDate")}
@@ -778,11 +839,11 @@ const SampleList: React.FC<SampleListProps> = ({
                 </th>
                 <th className="py-3 px-6 text-left">
                   <button
-                    onClick={() => handleSort("actualCompletionDate")}
+                    onClick={() => handleSort("actualSampleReceivedDate")}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Actual Completion Date
-                    {sortConfig.key === "actualCompletionDate" &&
+                    Actual Sample Received Date
+                    {sortConfig.key === "actualSampleReceivedDate" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp size={40} />
                       ) : (
@@ -791,9 +852,9 @@ const SampleList: React.FC<SampleListProps> = ({
                   </button>
                 </th>
                 <th className="py-3 px-6 text-left">Cut Qty</th>
-                <th className="py-3 px-6 text-left">Ship Qty</th>
-                <th className="py-3 px-6 text-left">Reject Qty</th>
                 <th className="py-3 px-6 text-left">Alter Qty</th>
+                <th className="py-3 px-6 text-left">Reject Qty</th>
+                <th className="py-3 px-6 text-left">Ship Qty</th>
                 <th className="py-3 px-6 text-center sticky right-0 bg-gray-200 z-20">
                   Actions
                 </th>
@@ -816,7 +877,8 @@ const SampleList: React.FC<SampleListProps> = ({
                       "status",
                       "samplePriorityNo",
                       "patternNo", // Include patternNo here
-                      "sampleRequestDate",
+                      "patternStatus", // Add this line
+                      "buyerRequestDate",
                       "buyer",
                       "style",
                       "season",
@@ -828,14 +890,15 @@ const SampleList: React.FC<SampleListProps> = ({
                       "procuredFabricQty",
                       "stockFabricQty",
                       "fabricIssueDate",
-                      "fabricReceiptDate",
+                      "fabricTrimsReceiptDate",
+                      "fabricRejectQty", // Add this line
                       "requiredCompletionDate",
                       "expectedCompletionDate",
-                      "actualCompletionDate",
+                      "actualSampleReceivedDate",
                       "cutQty",
-                      "shipQty",
-                      "rejectQty",
                       "alterQty",
+                      "rejectQty",
+                      "shipQty",
                     ].map((field) => (
                       <td key={field} className="py-3 px-6 text-left">
                         {renderCell(sample, field)}
@@ -856,6 +919,13 @@ const SampleList: React.FC<SampleListProps> = ({
                           title="Duplicate"
                         >
                           <Copy size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleRemarkClick(sample.id)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Add Remark"
+                        >
+                          <MessageSquare size={18} />
                         </button>
                         <button
                           onClick={(e) => handleDelete(e, sample.id)}
@@ -917,8 +987,12 @@ const SampleList: React.FC<SampleListProps> = ({
               activeFilter === "buyer"
                 ? BUYER_OPTIONS
                 : activeFilter === "typeOfSample"
-                  ? SAMPLE_TYPE_OPTIONS
-                  : STATUS_OPTIONS
+                ? SAMPLE_TYPE_OPTIONS
+                : activeFilter === "status"
+                ? STATUS_OPTIONS
+                : activeFilter === "patternStatus"
+                ? PATTERN_STATUS_OPTIONS
+                : []
             }
             filterName={activeFilter}
           />
@@ -929,6 +1003,13 @@ const SampleList: React.FC<SampleListProps> = ({
             onClose={() => setDuplicatingSample(null)}
             onSampleAdded={onSampleUpdated}
             duplicateSample={duplicatingSample}
+          />
+        )}
+        {selectedSampleForRemarks && (
+          <RemarkModal
+            sampleId={selectedSampleForRemarks}
+            onClose={() => setSelectedSampleForRemarks(null)}
+            onRemarkAdded={onSampleUpdated}
           />
         )}
       </div>

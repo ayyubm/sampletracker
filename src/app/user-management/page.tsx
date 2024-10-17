@@ -1,17 +1,26 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/hooks/useAuth';
 import UserManagement from '../../components/UserManagement';
 
 export default function UserManagementPage() {
-  const { userData, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || !userData?.isAdmin)) {
+      router.push('/login');
+    }
+  }, [user, userData, loading, router]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  if (!userData?.isAdmin) {
-    return <div>You do not have permission to access this page.</div>;
+  if (!user || !userData?.isAdmin) {
+    return null;
   }
 
   return <UserManagement />;

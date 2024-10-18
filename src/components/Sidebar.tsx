@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X, Home, Users, Calendar, Settings } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings, FileText, Archive } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           Assign Tailors
         </button>
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <Calendar size={18} className="inline-block mr-2" />
+          <FileText size={18} className="inline-block mr-2" />
           Daily Tailor Report
         </button>
         <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
@@ -58,6 +58,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             User Management
           </button>
         )}
+        <button onClick={() => handleNavigation('/archived-samples')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <Archive size={18} className="inline-block mr-2" />
+          Archived Samples
+        </button>
         <button
           onClick={handleSignOut}
           className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"

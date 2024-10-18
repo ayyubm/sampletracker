@@ -10,14 +10,13 @@ import SampleDetails from "./SampleDetails";
 import Portal from "./Portal";
 import { useAuth } from "../lib/hooks/useAuth";
 import {
-  BUYER_OPTIONS,
   SAMPLE_TYPE_OPTIONS,
   STATUS_OPTIONS,
   SEASON_OPTIONS,
   PATTERN_STATUS_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
-import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare } from "lucide-react";
+import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive } from "lucide-react";
 import RemarkModal from "./RemarkModal";
 
 interface ChangeInfo {
@@ -59,6 +58,7 @@ interface Sample {
     [key: string]: ChangeInfo;
   };
   remarks: string[];
+  isArchived: boolean; // Add this field
 }
 
 interface SampleListProps {
@@ -176,6 +176,7 @@ const SampleList: React.FC<SampleListProps> = ({
     const filteredAndSortedSamples = samples
       .filter((sample) => {
         return (
+          !sample.isArchived && // Add this condition
           (filters.buyer === "" || sample.buyer === filters.buyer) &&
           (filters.typeOfSample === "" ||
             sample.typeOfSample === filters.typeOfSample) &&
@@ -710,6 +711,16 @@ const SampleList: React.FC<SampleListProps> = ({
     setSelectedSampleForRemarks(sampleId);
   };
 
+  const handleArchive = async (sampleId: string) => {
+    try {
+      await updateDocument('samples', sampleId, { isArchived: true });
+      fetchSamples(); // Refresh the samples list
+      onSampleUpdated();
+    } catch (error) {
+      console.error('Error archiving sample:', error);
+    }
+  };
+
   return (
     <div className="h-full overflow-hidden">
       <div className="overflow-x-auto h-full">
@@ -950,6 +961,13 @@ const SampleList: React.FC<SampleListProps> = ({
                           title="Add Remark"
                         >
                           <MessageSquare size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleArchive(sample.id)}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Archive"
+                        >
+                          <Archive size={18} />
                         </button>
                         <button
                           onClick={(e) => handleDelete(e, sample.id)}

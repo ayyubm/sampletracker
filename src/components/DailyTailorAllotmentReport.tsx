@@ -17,15 +17,17 @@ interface SampleCount {
 }
 
 interface BuyerData {
-  buyer: string;
+  id: string;
+  buyerId: string;
+  name: string;
   sampleCounts: SampleCount;
   tailorsAssigned: number;
 }
 
-interface TailorAssignment {
-  date: string;
-  buyer: string;
-  tailorCounts: { [key: string]: number };
+interface Sample {
+  buyerId: string;
+  typeOfSample: string;
+  noOfPieces: number;
 }
 
 const DailyTailorAllotmentReport: React.FC = () => {
@@ -49,51 +51,50 @@ const DailyTailorAllotmentReport: React.FC = () => {
     setDataLoading(true);
     setError(null);
     try {
-      // Fetch all tailor assignments
-      const tailorAssignments = await getDocuments('tailorAssignments') as TailorAssignment[];
+      // Fetch buyers
+      const buyers = await getDocuments('buyer');
       
-      // Get unique buyers from all tailor assignments
-      const allBuyers = new Set<string>();
-      tailorAssignments.forEach((assignment) => {
-        allBuyers.add(assignment.buyer);
-      });
-
       // Fetch samples
       const samples = await getDocuments('samples');
 
-      // Initialize buyer data
-      const buyerData: { [key: string]: BuyerData } = {};
-      allBuyers.forEach(buyer => {
-        buyerData[buyer] = {
-          buyer,
-          sampleCounts: { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 },
-          tailorsAssigned: 0
-        };
-      });
-
-      // Process samples
+      // Process sample counts
+      const sampleCounts: { [buyerId: string]: SampleCount } = {};
       samples.forEach((sample: any) => {
-        if (sample.sampleRequestDate === selectedDate && buyerData[sample.buyer]) {
+        // Check if the sample is not archived before counting it
+        if (!sample.isArchived) {
+          if (!sampleCounts[sample.buyerId]) {
+            sampleCounts[sample.buyerId] = { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 };
+          }
           const sampleType = sample.typeOfSample.toUpperCase();
-          if (sampleType in buyerData[sample.buyer].sampleCounts) {
-            buyerData[sample.buyer].sampleCounts[sampleType as keyof SampleCount]++;
-          } else {
-            buyerData[sample.buyer].sampleCounts.Other++;
+          const pieceCount = Number(sample.noOfPieces) || 0;
+          if (sampleType === 'SMS/SRS/PA/COLOUR RUN') {
+            sampleCounts[sample.buyerId].SMS += pieceCount;
+          }
+          else if (sampleType === 'FIT') {
+            sampleCounts[sample.buyerId].FIT += pieceCount;
+          }
+          else if (sampleType === 'PP') {
+            sampleCounts[sample.buyerId].PP += pieceCount;
+          }
+          else if (sampleType === 'GPT') {
+            sampleCounts[sample.buyerId].GPT += pieceCount;
+          }
+          else {
+            sampleCounts[sample.buyerId].Other += pieceCount;
           }
         }
       });
 
-      // Process tailor assignments for the selected date
-      const assignmentForDate = tailorAssignments.find(assignment => assignment.date === selectedDate);
-      if (assignmentForDate) {
-        Object.entries(assignmentForDate.tailorCounts).forEach(([buyer, count]) => {
-          if (buyerData[buyer]) {
-            buyerData[buyer].tailorsAssigned = count;
-          }
-        });
-      }
+      // Prepare report data
+      const reportData: BuyerData[] = buyers.map((buyer: any) => ({
+        id: buyer.id,
+        buyerId: buyer.buyerId,
+        name: buyer.name,
+        sampleCounts: sampleCounts[buyer.buyerId] || { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 },
+        tailorsAssigned: buyer.tailorCounts?.[selectedDate] || 0
+      }));
 
-      setReportData(Object.values(buyerData));
+      setReportData(reportData);
     } catch (err) {
       console.error('Error fetching report data:', err);
       setError('An error occurred while fetching the report data. Please try again.');
@@ -115,7 +116,7 @@ const DailyTailorAllotmentReport: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="flex flex-col h-screen p-6">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex items-center mb-4">
         <button onClick={toggleSidebar} className="mr-4">
@@ -139,36 +140,50 @@ const DailyTailorAllotmentReport: React.FC = () => {
         <p>No data available for the selected date.</p>
       )}
       {reportData.length > 0 && (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2">Buyer</th>
-              <th className="border p-2">FIT</th>
-              <th className="border p-2">PP</th>
-              <th className="border p-2">GPT</th>
-              <th className="border p-2">SMS</th>
-              <th className="border p-2">Other</th>
-              <th className="border p-2">Total Samples</th>
-              <th className="border p-2">Tailors Assigned</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.map((data) => (
-              <tr key={data.buyer}>
-                <td className="border p-2">{data.buyer}</td>
-                <td className="border p-2">{data.sampleCounts.FIT}</td>
-                <td className="border p-2">{data.sampleCounts.PP}</td>
-                <td className="border p-2">{data.sampleCounts.GPT}</td>
-                <td className="border p-2">{data.sampleCounts.SMS}</td>
-                <td className="border p-2">{data.sampleCounts.Other}</td>
-                <td className="border p-2">
-                  {Object.values(data.sampleCounts).reduce((a, b) => a + b, 0)}
-                </td>
-                <td className="border p-2">{data.tailorsAssigned}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="flex-grow overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <table className="w-full border-collapse border table-fixed">
+              <colgroup>
+                <col className="w-1/4" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+                <col className="w-1/12" />
+              </colgroup>
+              <thead className="bg-gray-200 sticky top-0 z-10">
+                <tr>
+                  <th className="border p-2 sticky left-0 bg-gray-200 z-20 text-center">Buyer</th>
+                  <th className="border p-2 text-center">FIT</th>
+                  <th className="border p-2 text-center">PP</th>
+                  <th className="border p-2 text-center">GPT</th>
+                  <th className="border p-2 text-center">SMS</th>
+                  <th className="border p-2 text-center">Other</th>
+                  <th className="border p-2 text-center">Total Samples</th>
+                  <th className="border p-2 text-center">Tailors Assigned</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.map((data) => (
+                  <tr key={data.id}>
+                    <td className="border p-2 sticky left-0 bg-white text-center truncate">{data.name}</td>
+                    <td className="border p-2 text-center">{data.sampleCounts.FIT}</td>
+                    <td className="border p-2 text-center">{data.sampleCounts.PP}</td>
+                    <td className="border p-2 text-center">{data.sampleCounts.GPT}</td>
+                    <td className="border p-2 text-center">{data.sampleCounts.SMS}</td>
+                    <td className="border p-2 text-center">{data.sampleCounts.Other}</td>
+                    <td className="border p-2 text-center">
+                      {Object.values(data.sampleCounts).reduce((a, b) => a + b, 0)}
+                    </td>
+                    <td className="border p-2 text-center">{data.tailorsAssigned}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

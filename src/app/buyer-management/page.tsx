@@ -103,7 +103,7 @@ const BuyerManagement: React.FC = () => {
           </button>
           <h1 className="text-2xl font-bold">Buyer Management</h1>
         </div>
-        <div className="w-1/2 mx-auto">
+        <div className="w-full mx-auto">
           <div className="mb-4 flex items-center space-x-2">
             <input
               type="text"
@@ -126,57 +126,61 @@ const BuyerManagement: React.FC = () => {
               {isInitializing ? 'Initializing...' : 'Initialize Buyers'}
             </button>
           </div>
-          <table className="w-full bg-white shadow-md rounded">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Sr.
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Buyer ID
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {buyers.map((buyer, index) => (
-                <tr key={buyer.id} className="border-b">
-                  <td className="px-4 py-2 whitespace-nowrap">{index + 1}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{buyer.buyerId}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    {editingBuyer && editingBuyer.id === buyer.id ? (
-                      <input
-                        type="text"
-                        value={editingBuyer.name}
-                        onChange={(e) => setEditingBuyer({ ...editingBuyer, name: e.target.value })}
-                        className="border p-1 w-full"
-                      />
-                    ) : (
-                      buyer.name
-                    )}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    {editingBuyer && editingBuyer.id === buyer.id ? (
-                      <>
-                        <button onClick={handleEditBuyer} className="text-green-600 hover:text-green-900 mr-2">Save</button>
-                        <button onClick={() => setEditingBuyer(null)} className="text-gray-600 hover:text-gray-900">Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => setEditingBuyer(buyer)} className="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
-                        <button onClick={() => handleDeleteBuyer(buyer.id)} className="text-red-600 hover:text-red-900">Delete</button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+              <table className="w-full bg-white shadow-md rounded">
+                <thead className="bg-gray-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Sr.
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Buyer ID
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buyers.map((buyer, index) => (
+                    <tr key={buyer.id} className="border-b">
+                      <td className="px-4 py-2 whitespace-nowrap">{index + 1}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{buyer.buyerId}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {editingBuyer && editingBuyer.id === buyer.id ? (
+                          <input
+                            type="text"
+                            value={editingBuyer.name}
+                            onChange={(e) => setEditingBuyer({ ...editingBuyer, name: e.target.value })}
+                            className="border p-1 w-full"
+                          />
+                        ) : (
+                          buyer.name
+                        )}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {editingBuyer && editingBuyer.id === buyer.id ? (
+                          <>
+                            <button onClick={handleEditBuyer} className="text-green-600 hover:text-green-900 mr-2">Save</button>
+                            <button onClick={() => setEditingBuyer(null)} className="text-gray-600 hover:text-gray-900">Cancel</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => setEditingBuyer(buyer)} className="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
+                            <button onClick={() => handleDeleteBuyer(buyer.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

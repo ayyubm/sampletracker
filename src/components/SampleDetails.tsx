@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getDocument, updateDocument } from '../lib/firebase/firebaseUtils';
+import { getDocument, updateDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
 import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
@@ -27,6 +27,7 @@ interface SampleData {
   patternStatus: string;
   buyerRequestDate: string;
   buyer: string;
+  buyerId: string;
   style: string;
   season: string;
   typeOfSample: string;
@@ -65,6 +66,7 @@ const defaultSampleData: SampleData = {
   patternStatus: 'New',
   buyerRequestDate: '',
   buyer: '',
+  buyerId: '',
   style: '',
   season: '',
   typeOfSample: '',
@@ -93,40 +95,62 @@ function formatTimestamp(timestamp: string): string {
   return format(date, "dd/MM/yy @ hh:mm:ss a");
 }
 
+interface Buyer {
+  id: string;
+  buyerId: string;
+  name: string;
+}
+
 export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: SampleDetailsProps) {
   const [sample, setSample] = useState<SampleData>(defaultSampleData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [originalSample, setOriginalSample] = useState<SampleData>(defaultSampleData);
   const { userData } = useAuth();
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
 
   useEffect(() => {
-    const fetchSample = async () => {
+    const fetchSampleAndBuyers = async () => {
       setLoading(true);
       setError(null);
       try {
-        const fetchedSample = await getDocument('samples', sampleId);
+        const [fetchedSample, buyersData] = await Promise.all([
+          getDocument('samples', sampleId),
+          getDocuments('buyer')
+        ]);
         const { id, ...sampleWithoutId } = fetchedSample;
         const sampleData = { ...defaultSampleData, ...sampleWithoutId };
         setSample(sampleData);
         setOriginalSample(sampleData);
+        setBuyers(buyersData as Buyer[]);
       } catch (err) {
-        console.error('Error fetching sample:', err);
-        setError('Failed to load sample details. Please try again.');
+        console.error('Error fetching sample or buyers:', err);
+        setError('Failed to load sample details or buyers. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSample();
+    fetchSampleAndBuyers();
   }, [sampleId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setSample(prevSample => ({
-      ...prevSample,
-      [name]: value,
-    }));
+    if (name === 'buyer') {
+      const selectedBuyer = buyers.find(b => b.name === value);
+      if (selectedBuyer) {
+        setSample(prevSample => ({
+          ...prevSample,
+          [name]: value,
+          buyerId: selectedBuyer.buyerId
+        }));
+      }
+    } else {
+      setSample(prevSample => ({
+        ...prevSample,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -237,9 +261,9 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                     required
                   >
                     <option value="">Select a buyer</option>
-                    {BUYER_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
+                    {buyers.map((buyer) => (
+                      <option key={buyer.buyerId} value={buyer.name}>
+                        {buyer.name}
                       </option>
                     ))}
                   </select>

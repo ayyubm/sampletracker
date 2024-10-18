@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -37,16 +37,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
       </div>
       <nav className="mt-8">
         <button onClick={() => handleNavigation('/')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <Home size={18} className="inline-block mr-2" />
           Dashboard
         </button>
         <button onClick={() => handleNavigation('/assign-tailors')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <Calendar size={18} className="inline-block mr-2" />
           Assign Tailors
         </button>
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <Calendar size={18} className="inline-block mr-2" />
           Daily Tailor Report
+        </button>
+        <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <Users size={18} className="inline-block mr-2" />
+          Buyer Management
         </button>
         {userData?.isAdmin && (
           <button onClick={() => handleNavigation('/user-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <Settings size={18} className="inline-block mr-2" />
             User Management
           </button>
         )}
@@ -54,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           onClick={handleSignOut}
           className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"
         >
+          <X size={18} className="inline-block mr-2" />
           Sign Out
         </button>
       </nav>

@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { addDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
+import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
+
+interface Buyer {
+  id?: string;
+  buyerId: string;
+  name: string;
+}
 
 interface Sample {
   id: string;
@@ -11,14 +17,15 @@ interface Sample {
   timestamp: string;
   status: string;
   samplePriorityNo: string;
-  patternNo: string; // New field
+  patternNo: string;
   patternStatus: string;
   buyerRequestDate: string;
   buyer: string;
+  buyerId: string; // New field to store the buyer's ID
   style: string;
   season: string;
   typeOfSample: string;
-  color: string; // New field
+  color: string;
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
@@ -44,6 +51,7 @@ interface DuplicateSample {
   patternStatus: string;
   buyerRequestDate: string;
   buyer: string;
+  buyerId: string;
   style: string;
   season: string;
   typeOfSample: string;
@@ -90,6 +98,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     patternStatus: '', // Add this line
     buyerRequestDate: '',
     buyer: '',
+    buyerId: '', // New field to store the buyer's ID
     style: '',
     season: '',
     typeOfSample: '',
@@ -101,11 +110,14 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
 
   useEffect(() => {
-    const fetchSampleId = async () => {
+    const fetchSampleIdAndBuyers = async () => {
       try {
         const id = await generateSampleId();
+        const buyersData = await getDocuments('buyer') as Buyer[];
+        setBuyers(buyersData);
         if (duplicateSample) {
           setFormData({
             ...formData,
@@ -116,6 +128,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             patternStatus: duplicateSample.patternStatus,
             buyerRequestDate: duplicateSample.buyerRequestDate,
             buyer: duplicateSample.buyer,
+            buyerId: duplicateSample.buyerId, // Set the buyerId for duplicated sample
             style: duplicateSample.style,
             season: duplicateSample.season,
             typeOfSample: duplicateSample.typeOfSample,
@@ -129,19 +142,28 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
           setFormData(prev => ({ ...prev, sampleId: id }));
         }
       } catch (err) {
-        console.error('Error generating sample ID:', err);
-        setError('Failed to generate sample ID. Please try again.');
+        console.error('Error generating sample ID or fetching buyers:', err);
+        setError('Failed to initialize form. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSampleId();
+    fetchSampleIdAndBuyers();
   }, [duplicateSample]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    if (name === 'buyer') {
+      const selectedBuyer = buyers.find(b => b.name === value);
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value,
+        buyerId: selectedBuyer ? selectedBuyer.buyerId : ''
+      }));
+    } else {
+      setFormData(prevData => ({ ...prevData, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -258,8 +280,8 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               required
             >
               <option value="">Select a buyer</option>
-              {BUYER_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
+              {buyers.map((buyer) => (
+                <option key={buyer.buyerId} value={buyer.name}>{buyer.name}</option>
               ))}
             </select>
           </div>

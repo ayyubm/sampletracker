@@ -35,6 +35,7 @@ interface Sample {
   patternStatus: string;
   buyerRequestDate: string;
   buyer: string;
+  buyerId: string;
   style: string;
   season: string;
   typeOfSample: string;
@@ -69,6 +70,12 @@ interface SampleListProps {
 interface SortConfig {
   key: string;
   direction: "asc" | "desc";
+}
+
+interface Buyer {
+  id: string;
+  buyerId: string;
+  name: string;
 }
 
 const ChevronDownIcon = () => (
@@ -148,6 +155,8 @@ const SampleList: React.FC<SampleListProps> = ({
 
   const [selectedSampleForRemarks, setSelectedSampleForRemarks] = useState<string | null>(null);
 
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+
   const fetchSamples = useCallback(async () => {
     const fetchedSamples = await getDocuments("samples");
     setSamples(fetchedSamples as Sample[]);
@@ -155,7 +164,13 @@ const SampleList: React.FC<SampleListProps> = ({
 
   useEffect(() => {
     fetchSamples();
+    fetchBuyers();
   }, [fetchSamples, refreshTrigger]);
+
+  const fetchBuyers = async () => {
+    const buyersData = await getDocuments('buyer');
+    setBuyers(buyersData as Buyer[]);
+  };
 
   useEffect(() => {
     const filteredAndSortedSamples = samples
@@ -430,8 +445,7 @@ const SampleList: React.FC<SampleListProps> = ({
   };
 
   const renderCell = (sample: Sample, field: string) => {
-    const isEditing =
-      editingCell?.id === sample.id && editingCell?.field === field;
+    const isEditing = editingCell?.id === sample.id && editingCell?.field === field;
     const value = sample[field as keyof Sample] || "";
 
     if (isEditing) {
@@ -439,16 +453,26 @@ const SampleList: React.FC<SampleListProps> = ({
         return (
           <select
             value={editValue}
-            onChange={handleCellChange}
+            onChange={(e) => {
+              const selectedBuyer = buyers.find(b => b.name === e.target.value);
+              if (selectedBuyer) {
+                handleCellChange(e);
+                // Update buyerId when buyer is changed
+                updateDocument("samples", sample.id, { 
+                  buyer: selectedBuyer.name, 
+                  buyerId: selectedBuyer.buyerId 
+                });
+              }
+            }}
             onBlur={handleCellBlur}
             onKeyDown={handleCellKeyDown}
             className="w-full p-1 border rounded"
             autoFocus
           >
             <option value="">Select a buyer</option>
-            {BUYER_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
+            {buyers.map((buyer) => (
+              <option key={buyer.buyerId} value={buyer.name}>
+                {buyer.name}
               </option>
             ))}
           </select>
@@ -985,7 +1009,7 @@ const SampleList: React.FC<SampleListProps> = ({
           <FilterDropdown
             options={
               activeFilter === "buyer"
-                ? BUYER_OPTIONS
+                ? buyers.map(b => b.name)
                 : activeFilter === "typeOfSample"
                 ? SAMPLE_TYPE_OPTIONS
                 : activeFilter === "status"

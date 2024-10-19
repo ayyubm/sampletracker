@@ -28,6 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
     handleNavigation('/login');
   };
 
+  const canAccessAssignTailors = userData?.isAdmin || userData?.team === 'Sampling';
+
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
       <div className="flex justify-end p-4">
@@ -40,18 +42,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           <Home size={18} className="inline-block mr-2" />
           Dashboard
         </button>
-        <button onClick={() => handleNavigation('/assign-tailors')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <Calendar size={18} className="inline-block mr-2" />
-          Assign Tailors
-        </button>
+        {canAccessAssignTailors && (
+          <button onClick={() => handleNavigation('/assign-tailors')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <Calendar size={18} className="inline-block mr-2" />
+            Assign Tailors
+          </button>
+        )}
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <FileText size={18} className="inline-block mr-2" />
           Daily Tailor Report
         </button>
-        <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <Users size={18} className="inline-block mr-2" />
-          Buyer Management
-        </button>
+        {userData?.isAdmin && (
+          <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <Users size={18} className="inline-block mr-2" />
+            Buyer Management
+          </button>
+        )}
         {userData?.isAdmin && (
           <button onClick={() => handleNavigation('/user-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
             <Settings size={18} className="inline-block mr-2" />

@@ -22,7 +22,8 @@ const ArchivedSamples: React.FC = () => {
   const [archivedSamples, setArchivedSamples] = useState<Sample[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
-  const { user, loading } = useAuth();
+  const [unarchiveConfirmation, setUnarchiveConfirmation] = useState<string | null>(null);
+  const { user, loading, userData } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,13 +39,24 @@ const ArchivedSamples: React.FC = () => {
     setArchivedSamples(samples.filter((sample: Sample) => sample.isArchived));
   };
 
-  const handleUnarchive = async (sampleId: string) => {
-    try {
-      await updateDocument('samples', sampleId, { isArchived: false });
-      fetchArchivedSamples(); // Refresh the archived samples list
-    } catch (error) {
-      console.error('Error unarchiving sample:', error);
+  const handleUnarchive = (sampleId: string) => {
+    setUnarchiveConfirmation(sampleId);
+  };
+
+  const confirmUnarchive = async () => {
+    if (unarchiveConfirmation) {
+      try {
+        await updateDocument('samples', unarchiveConfirmation, { isArchived: false });
+        fetchArchivedSamples(); // Refresh the archived samples list
+      } catch (error) {
+        console.error('Error unarchiving sample:', error);
+      }
+      setUnarchiveConfirmation(null);
     }
+  };
+
+  const cancelUnarchive = () => {
+    setUnarchiveConfirmation(null);
   };
 
   const handleDelete = (sampleId: string) => {
@@ -120,13 +132,15 @@ const ArchivedSamples: React.FC = () => {
                       >
                         <ArrowUpCircle size={18} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(sample.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {userData?.isAdmin && (
+                        <button
+                          onClick={() => handleDelete(sample.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -135,7 +149,33 @@ const ArchivedSamples: React.FC = () => {
           </table>
         </div>
       </div>
-      {deleteConfirmation && (
+      {unarchiveConfirmation && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-5 rounded-lg shadow-xl">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">
+              Confirm Unarchive
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Are you sure you want to unarchive this sample?
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={cancelUnarchive}
+                className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmUnarchive}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Unarchive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteConfirmation && userData?.isAdmin && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
           <div className="bg-white p-5 rounded-lg shadow-xl">
             <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">

@@ -98,6 +98,11 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
     setHasUnsavedChanges(true);
   };
 
+  // Add this function to reverse and sort the dates
+  const getReversedDates = useCallback(() => {
+    return [...allDates].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  }, [allDates]);
+
   return (
     <div className="w-full px-4">
       <div className="mb-4 flex justify-between items-center">
@@ -136,7 +141,7 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
               <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal sticky top-0 z-20">
                 <tr>
                   <th className="w-48 py-3 px-2 text-left sticky left-0 z-30 bg-gray-200">Buyer</th>
-                  {allDates.map(date => (
+                  {getReversedDates().map(date => (
                     <th key={date} className="py-3 px-1 text-center text-xs" style={{ minWidth: '8rem' }}>
                       <div className="flex items-center justify-center">
                         <span>{format(parseISO(date), 'dd/MM/yy')}</span>
@@ -156,7 +161,7 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
                 {buyers.map((buyer, index) => (
                   <tr key={buyer.id} className="border-b border-gray-200 hover:bg-gray-100">
                     <td className="w-48 py-3 px-2 text-left whitespace-nowrap sticky left-0 bg-white z-10">{buyer.name}</td>
-                    {allDates.map(date => (
+                    {getReversedDates().map(date => (
                       <td key={date} className="py-3 px-1 text-center" style={{ minWidth: '8rem' }}>
                         <input
                           type="number"

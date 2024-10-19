@@ -9,7 +9,7 @@ import Sidebar from '../../components/Sidebar';
 import { Menu } from 'lucide-react';
 
 export default function AssignTailorsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, userData } = useAuth();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,10 +17,14 @@ export default function AssignTailorsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (!userData?.isAdmin && userData?.team !== 'Sampling') {
+        router.push('/'); // Redirect to home if not admin or not in Sampling team
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, userData, router]);
 
   const handleUnsavedChanges = (unsavedChanges: boolean) => {
     setHasUnsavedChanges(unsavedChanges);
@@ -55,8 +59,8 @@ export default function AssignTailorsPage() {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
-    return null;
+  if (!user || (!userData?.isAdmin && userData?.team !== 'Sampling')) {
+    return null; // This will prevent the component from rendering while redirecting
   }
 
   return (

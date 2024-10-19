@@ -5,6 +5,8 @@ import { Menu } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { getDocuments, addDocument, updateDocument, deleteDocument } from '../../lib/firebase/firebaseUtils';
 import { BUYER_OPTIONS } from '../../lib/constants';
+import { useAuth } from '../../lib/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 interface Buyer {
   id?: string;
@@ -18,10 +20,19 @@ const BuyerManagement: React.FC = () => {
   const [newBuyerName, setNewBuyerName] = useState('');
   const [editingBuyer, setEditingBuyer] = useState<Buyer | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
+  const { userData, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchBuyers();
-  }, []);
+    if (!loading) {
+      if (!userData || !userData.isAdmin) {
+        router.push('/'); // Redirect non-admin users to the home page
+      } else {
+        fetchBuyers();
+      }
+    }
+  }, [userData, loading, router]);
 
   const fetchBuyers = async () => {
     const buyersData = await getDocuments('buyer');
@@ -64,13 +75,24 @@ const BuyerManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteBuyer = async (id: string | undefined) => {
-    if (id) {
-      await deleteDocument('buyer', id);
-      setBuyers(buyers.filter(b => b.id !== id));
-    } else {
-      console.error('Cannot delete buyer: ID is undefined');
+  const handleDeleteBuyer = (id: string | undefined) => {
+    setDeleteConfirmation(id || null);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmation) {
+      try {
+        await deleteDocument('buyer', deleteConfirmation);
+        setBuyers(buyers.filter(b => b.id !== deleteConfirmation));
+        setDeleteConfirmation(null);
+      } catch (error) {
+        console.error('Cannot delete buyer: ', error);
+      }
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmation(null);
   };
 
   const initializeBuyersFromConstants = async () => {
@@ -89,6 +111,14 @@ const BuyerManagement: React.FC = () => {
       setIsInitializing(false);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userData || !userData.isAdmin) {
+    return null; // This will prevent the component from rendering while redirecting
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -129,28 +159,20 @@ const BuyerManagement: React.FC = () => {
           <div className="overflow-x-auto">
             <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
               <table className="w-full bg-white shadow-md rounded">
-                <thead className="bg-gray-200 sticky top-0 z-10">
+                <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Sr.
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Buyer ID
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="py-3 px-6 text-left">Sr.</th>
+                    <th className="py-3 px-6 text-left">Buyer ID</th>
+                    <th className="py-3 px-6 text-left">Name</th>
+                    <th className="py-3 px-6 text-left">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-gray-600 text-sm font-light">
                   {buyers.map((buyer, index) => (
-                    <tr key={buyer.id} className="border-b">
-                      <td className="px-4 py-2 whitespace-nowrap">{index + 1}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">{buyer.buyerId}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">
+                    <tr key={buyer.id} className="border-b border-gray-200 hover:bg-gray-100">
+                      <td className="py-3 px-6 text-left whitespace-nowrap">{index + 1}</td>
+                      <td className="py-3 px-6 text-left whitespace-nowrap">{buyer.buyerId}</td>
+                      <td className="py-3 px-6 text-left whitespace-nowrap">
                         {editingBuyer && editingBuyer.id === buyer.id ? (
                           <input
                             type="text"
@@ -162,7 +184,7 @@ const BuyerManagement: React.FC = () => {
                           buyer.name
                         )}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
+                      <td className="py-3 px-6 text-left">
                         {editingBuyer && editingBuyer.id === buyer.id ? (
                           <>
                             <button onClick={handleEditBuyer} className="text-green-600 hover:text-green-900 mr-2">Save</button>
@@ -183,6 +205,32 @@ const BuyerManagement: React.FC = () => {
           </div>
         </div>
       </div>
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-5 rounded-lg shadow-xl">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">
+              Confirm Deletion
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Are you sure you want to delete this buyer? This action cannot be undone.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={cancelDelete}
+                className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

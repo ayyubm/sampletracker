@@ -95,22 +95,22 @@ const BuyerManagement: React.FC = () => {
     setDeleteConfirmation(null);
   };
 
-  const initializeBuyersFromConstants = async () => {
-    setIsInitializing(true);
-    try {
-      for (let i = 0; i < BUYER_OPTIONS.length; i++) {
-        const buyerName = BUYER_OPTIONS[i];
-        const buyerId = `Buyer${(i + 1).toString().padStart(4, '0')}`;
-        const newBuyer: Buyer = { buyerId, name: buyerName };
-        await addDocument('buyer', newBuyer);
-      }
-      await fetchBuyers(); // Refresh the buyers list
-    } catch (error) {
-      console.error('Error initializing buyers:', error);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
+  // const initializeBuyersFromConstants = async () => {
+  //   setIsInitializing(true);
+  //   try {
+  //     for (let i = 0; i < BUYER_OPTIONS.length; i++) {
+  //       const buyerName = BUYER_OPTIONS[i];
+  //       const buyerId = `Buyer${(i + 1).toString().padStart(4, '0')}`;
+  //       const newBuyer: Buyer = { buyerId, name: buyerName };
+  //       await addDocument('buyer', newBuyer);
+  //     }
+  //     await fetchBuyers(); // Refresh the buyers list
+  //   } catch (error) {
+  //     console.error('Error initializing buyers:', error);
+  //   } finally {
+  //     setIsInitializing(false);
+  //   }
+  // };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -148,13 +148,13 @@ const BuyerManagement: React.FC = () => {
             >
               Add Buyer
             </button>
-            <button 
+            {/* <button 
               onClick={initializeBuyersFromConstants}
               disabled={isInitializing}
               className="bg-green-500 text-white p-2 rounded disabled:bg-green-300 whitespace-nowrap"
             >
               {isInitializing ? 'Initializing...' : 'Initialize Buyers'}
-            </button>
+            </button> */}
           </div>
           <div className="overflow-x-auto">
             <div className="max-h-[calc(100vh-200px)] overflow-y-auto">

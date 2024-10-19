@@ -3,27 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-
-// const firebaseConfigDev = {
-//   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY_DEV,
-//   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN_DEV,
-//   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID_DEV,
-//   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET_DEV,
-//   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID_DEV,
-//   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID_DEV,
-// };
-
-// const firebaseConfigProd = {
-//   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY_PROD,
-//   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN_PROD,
-//   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID_PROD,
-//   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET_PROD,
-//   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID_PROD,
-//   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID_PROD,
-// };
-// // Initialize Firebase
-
-const firebaseConfigProd= {
+const firebaseConfigProd = {
   apiKey: "AIzaSyD13_2gMtG004kNYkfY3pqWO0ZkriogmWU",
   authDomain: "texport-sample-tracker-prod.firebaseapp.com",
   projectId: "texport-sample-tracker-prod",
@@ -41,9 +21,7 @@ const firebaseConfigDev = {
   appId: "1:984030524709:web:aebd66d2b1cd0cf66e16cc",
 };
 
-// const firebaseConfig = process.env.NODE_ENV === "production" ? firebaseConfigProd : firebaseConfigDev;
-//const app = getApps().length ? getApp() : initializeApp(fireb aseConfig);
-const app = initializeApp(firebaseConfigDev);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfigProd);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);

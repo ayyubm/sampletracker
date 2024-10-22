@@ -122,7 +122,7 @@ const DailyTailorAllotmentReport: React.FC = () => {
         <button onClick={toggleSidebar} className="mr-4">
           <Menu size={24} />
         </button>
-        <h1 className="text-2xl font-bold">Daily Tailor Allotment Report</h1>
+        <h1 className="text-2xl font-bold">Buyer Wise Sample Report</h1>
       </div>
       <div className="mb-4">
         <label htmlFor="date" className="mr-2">Select Date:</label>

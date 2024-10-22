@@ -43,6 +43,8 @@ interface Sample {
   changeTracking: {
     [key: string]: ChangeInfo;
   };
+  size: string;
+  washType: string;
 }
 
 interface DuplicateSample {
@@ -60,6 +62,8 @@ interface DuplicateSample {
   typeOfFabric: string;
   requiredFabricQty: number;
   requiredCompletionDate: string;
+  size: string;
+  washType: string;
 }
 
 interface SampleFormProps {
@@ -105,6 +109,8 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     noOfPieces: 0,
     typeOfFabric: '',
     color: '',
+    size: '', // Add this line
+    washType: '', // Add this line
     requiredFabricQty: 0,
     requiredCompletionDate: '',
   });
@@ -135,6 +141,8 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             noOfPieces: duplicateSample.noOfPieces,
             typeOfFabric: duplicateSample.typeOfFabric,
             color: duplicateSample.color, // Include color
+            size: duplicateSample.size || '', // Add this line
+            washType: duplicateSample.washType || '', // Add this line
             requiredFabricQty: duplicateSample.requiredFabricQty, // Include requiredFabricQty
             requiredCompletionDate: duplicateSample.requiredCompletionDate,
           });
@@ -362,6 +370,28 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               name="color"
               id="color"
               value={formData.color}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="size" className="block text-sm font-medium text-gray-700">Size</label>
+            <input
+              type="text"
+              name="size"
+              id="size"
+              value={formData.size}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="washType" className="block text-sm font-medium text-gray-700">Wash Type</label>
+            <input
+              type="text"
+              name="washType"
+              id="washType"
+              value={formData.washType}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />

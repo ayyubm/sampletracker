@@ -32,6 +32,8 @@ interface SampleData {
   season: string;
   typeOfSample: string;
   color: string;
+  size: string; // Add this line
+  washType: string; // Add this line
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
@@ -71,6 +73,8 @@ const defaultSampleData: SampleData = {
   season: '',
   typeOfSample: '',
   color: '',
+  size: '', // Add this line
+  washType: '', // Add this line
   noOfPieces: 0,
   typeOfFabric: '',
   requiredFabricQty: 0,
@@ -193,9 +197,11 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'style',
     'season',
     'typeOfSample',
+    'color',
+    'size', // Add this line
+    'washType', // Add this line
     'noOfPieces',
     'typeOfFabric',
-    'color',
     'requiredFabricQty',
     'procuredFabricQty',
     'stockFabricQty',
@@ -229,7 +235,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
             return (
               <div key={key} className="mb-4">
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
-                  {key === 'fabricRejectQty' ? 'Fabric Reject Qty' : key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </label>
                 {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'cutQty' || key === 'shipQty' || key === 'rejectQty' || key === 'alterQty' || key === 'requiredFabricQty' || key === 'procuredFabricQty' || key === 'stockFabricQty' ? (
                   <input

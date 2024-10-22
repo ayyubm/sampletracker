@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
         )}
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <FileText size={18} className="inline-block mr-2" />
-          Daily Tailor Report
+          Buyer Wise Sample Report
         </button>
         {userData?.isAdmin && (
           <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">

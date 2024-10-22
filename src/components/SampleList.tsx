@@ -39,6 +39,8 @@ interface Sample {
   season: string;
   typeOfSample: string;
   color: string; // New field
+  size: string; // Add this line
+  washType: string; // Add this line
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
@@ -384,6 +386,8 @@ const SampleList: React.FC<SampleListProps> = ({
       "color",
       "patternStatus",
       "fabricRejectQty",
+      "size",
+      "washType",
     ];
 
     if (editableFields.includes(field)) {
@@ -615,6 +619,18 @@ const SampleList: React.FC<SampleListProps> = ({
         );
       }
 
+      // Add cases for the new fields
+      if (field === 'size' || field === 'washType') {
+        return (
+          <div
+            onClick={() => handleCellClick(sample.id, field, sample[field] || '')}
+            className={`cursor-pointer hover:bg-gray-100 p-1 rounded ${!sample[field] ? "h-8" : ""}`}
+          >
+            {sample[field] || "\u00A0"}
+          </div>
+        );
+      }
+
       return (
         <div
           onClick={() =>
@@ -825,6 +841,8 @@ const SampleList: React.FC<SampleListProps> = ({
                 </th>
                 <th className="py-3 px-6 text-left">Type of Fabric</th>
                 <th className="py-3 px-6 text-left">Color</th>
+                <th className="py-3 px-6 text-left">Size</th>
+                <th className="py-3 px-6 text-left">Wash Type</th>
                 <th className="py-3 px-6 text-left">No. of Pieces</th>
                 <th className="py-3 px-6 text-left">Required Fabric Qty</th>
                 <th className="py-3 px-6 text-left">Procured Fabric Qty</th>
@@ -934,6 +952,8 @@ const SampleList: React.FC<SampleListProps> = ({
                       "typeOfSample",
                       "typeOfFabric",
                       "color", // Include color here
+                      "size", // Add this line
+                      "washType", // Add this line
                       "noOfPieces",
                       "requiredFabricQty",
                       "procuredFabricQty",

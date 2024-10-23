@@ -5,6 +5,10 @@ import { getDocument, updateDocument, getDocuments } from '../lib/firebase/fireb
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
 import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
+import { PDFDownloadLink, BlobProvider } from '@react-pdf/renderer';
+import SamplingProgramSheet from './SamplingProgramSheet';
+import { Sample } from '../types/sample';
+import { User } from '../types/user';
 
 
 interface SampleDetailsProps {
@@ -96,7 +100,8 @@ const defaultSampleData: SampleData = {
 
 function formatTimestamp(timestamp: string): string {
   const date = new Date(timestamp);
-  return format(date, "dd/MM/yy @ hh:mm:ss a");
+  const formattedDate = format(date, "dd/MM/yyyy @ HH:mm:ss");
+  return formattedDate;
 }
 
 interface Buyer {
@@ -104,6 +109,14 @@ interface Buyer {
   buyerId: string;
   name: string;
 }
+
+// Add this type definition
+type UserData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  // Add other properties as needed
+};
 
 export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: SampleDetailsProps) {
   const [sample, setSample] = useState<SampleData>(defaultSampleData);
@@ -387,6 +400,30 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
               <p className="text-gray-500">No remarks yet.</p>
             )}
           </div>
+        </div>
+
+        <div className="mt-4 flex justify-between">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          >
+            Close
+          </button>
+          {/* Update the PDF generation button */}
+          <BlobProvider document={<SamplingProgramSheet sample={sample as Sample} firstName={userData?.firstName} />}>
+            {({ url, loading, error }) => (
+              <a
+                href={url || '#'}
+                download={`sampling_program_sheet_${sample.sampleId}.pdf`}
+                className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading || error ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={(e) => {
+                  if (loading || error) e.preventDefault();
+                }}
+              >
+                {loading ? 'Loading document...' : error ? 'Error' : 'Generate Sampling Program Sheet'}
+              </a>
+            )}
+          </BlobProvider>
         </div>
       </div>
     </div>

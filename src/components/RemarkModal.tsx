@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDocument, updateDocument } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
+import { format } from 'date-fns'; // Import the format function from date-fns
 
 interface RemarkModalProps {
   sampleId: string;
@@ -49,7 +50,7 @@ export default function RemarkModal({ sampleId, onClose, onRemarkAdded }: Remark
               <div key={index} className="mb-2 p-2 bg-gray-100 rounded">
                 <p className="text-sm">{remark.text}</p>
                 <p className="text-xs text-gray-500">
-                  By {remark.user} on {new Date(remark.timestamp).toLocaleString()}
+                  By {remark.user} on {format(new Date(remark.timestamp), 'dd/MM/yyyy HH:mm:ss')}
                 </p>
               </div>
             ))

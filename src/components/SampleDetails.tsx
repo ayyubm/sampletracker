@@ -392,7 +392,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                 <div key={index} className="mb-2 p-2 bg-gray-100 rounded">
                   <p className="text-sm">{remark.text}</p>
                   <p className="text-xs text-gray-500">
-                    By {remark.user} on {new Date(remark.timestamp).toLocaleString()}
+                    By {remark.user} on {format(new Date(remark.timestamp), 'dd/MM/yyyy HH:mm:ss')}
                   </p>
                 </div>
               ))
@@ -410,7 +410,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
             Close
           </button>
           {/* Update the PDF generation button */}
-          <BlobProvider document={<SamplingProgramSheet sample={sample as Sample} firstName={userData?.firstName} />}>
+          <BlobProvider document={<SamplingProgramSheet sample={sample as Sample} firstName={sample.changeTracking['sampleId'].name} />}>
             {({ url, loading, error }) => (
               <a
                 href={url || '#'}

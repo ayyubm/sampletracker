@@ -41,8 +41,8 @@ interface SampleData {
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
-  procuredFabricQty: number;
-  stockFabricQty: number;
+  procuredFabricQtyIssued: number;
+  stockFabricQtyIssued: number;
   fabricIssueDate: string;
   fabricTrimsReceiptDate: string;
   fabricRejectQty: number; // Add this line
@@ -82,8 +82,8 @@ const defaultSampleData: SampleData = {
   noOfPieces: 0,
   typeOfFabric: '',
   requiredFabricQty: 0,
-  procuredFabricQty: 0,
-  stockFabricQty: 0,
+  procuredFabricQtyIssued: 0,
+  stockFabricQtyIssued: 0,
   fabricIssueDate: '',
   fabricTrimsReceiptDate: '',
   fabricRejectQty: 0, // Add this line
@@ -216,8 +216,8 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'noOfPieces',
     'typeOfFabric',
     'requiredFabricQty',
-    'procuredFabricQty',
-    'stockFabricQty',
+    'procuredFabricQtyIssued',
+    'stockFabricQtyIssued',
     'fabricIssueDate',
     'fabricTrimsReceiptDate',
     'fabricRejectQty', // Add this line
@@ -250,7 +250,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </label>
-                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'cutQty' || key === 'shipQty' || key === 'rejectQty' || key === 'alterQty' || key === 'requiredFabricQty' || key === 'procuredFabricQty' || key === 'stockFabricQty' ? (
+                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'cutQty' || key === 'shipQty' || key === 'rejectQty' || key === 'alterQty' || key === 'requiredFabricQty' || key === 'procuredFabricQtyIssued' || key === 'stockFabricQtyIssued' ? (
                   <input
                     type="number"
                     min="0"

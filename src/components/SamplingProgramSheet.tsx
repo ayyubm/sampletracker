@@ -145,7 +145,7 @@ const SamplingProgramSheet: React.FC<SamplingProgramSheetProps> = ({ sample, fir
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>Sampling Program Sheet</Text>
+        <Text style={styles.header}>Sampling Program Sheet   ---   {sample.sampleId}</Text>
         <Text style={styles.date}>{formatDate(new Date())}</Text>
       </View>
       <View style={styles.table}>
@@ -162,7 +162,6 @@ const SamplingProgramSheet: React.FC<SamplingProgramSheetProps> = ({ sample, fir
         <FourColumnHeader
           labels={["BODY FABRIC", "THREAD", "BUTTON", "INTERLINING CODE"]}
         />
-        {/* Add three empty rows */}
         <FourColumnRow 
           labels={[sample.typeOfFabric, "", "", ""]}
         />

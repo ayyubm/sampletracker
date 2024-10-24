@@ -44,8 +44,8 @@ interface Sample {
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
-  procuredFabricQty: number;
-  stockFabricQty: number;
+  procuredFabricQtyIssued: number;
+  stockFabricQtyIssued: number;
   fabricIssueDate: string;
   fabricTrimsReceiptDate: string;
   fabricRejectQty: number; // Add this line
@@ -371,8 +371,8 @@ const SampleList: React.FC<SampleListProps> = ({
       "noOfPieces",
       "typeOfFabric",
       "requiredFabricQty",
-      "procuredFabricQty",
-      "stockFabricQty",
+      "procuredFabricQtyIssued",
+      "stockFabricQtyIssued",
       "fabricIssueDate",
       "fabricTrimsReceiptDate",
       "requiredCompletionDate",
@@ -566,7 +566,7 @@ const SampleList: React.FC<SampleListProps> = ({
             ))}
           </select>
         );
-      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'cutQty' || field === 'shipQty' || field === 'rejectQty' || field === 'alterQty' || field === 'requiredFabricQty' || field === 'procuredFabricQty' || field === 'stockFabricQty') {
+      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'cutQty' || field === 'shipQty' || field === 'rejectQty' || field === 'alterQty' || field === 'requiredFabricQty' || field === 'procuredFabricQtyIssued' || field === 'stockFabricQtyIssued') {
         return (
           <input
             type="number"
@@ -845,8 +845,8 @@ const SampleList: React.FC<SampleListProps> = ({
                 <th className="py-3 px-6 text-left">Wash Type</th>
                 <th className="py-3 px-6 text-left">No. of Pieces</th>
                 <th className="py-3 px-6 text-left">Required Fabric Qty</th>
-                <th className="py-3 px-6 text-left">Procured Fabric Qty</th>
-                <th className="py-3 px-6 text-left">Stock Fabric Qty</th>
+                <th className="py-3 px-6 text-left">Procured Fabric Qty Issued</th>
+                <th className="py-3 px-6 text-left">Stock Fabric Qty Issued</th>
                 <th className="py-3 px-6 text-left">
                   <button
                     onClick={() => handleSort("fabricIssueDate")}
@@ -956,8 +956,8 @@ const SampleList: React.FC<SampleListProps> = ({
                       "washType", // Add this line
                       "noOfPieces",
                       "requiredFabricQty",
-                      "procuredFabricQty",
-                      "stockFabricQty",
+                      "procuredFabricQtyIssued",
+                      "stockFabricQtyIssued",
                       "fabricIssueDate",
                       "fabricTrimsReceiptDate",
                       "fabricRejectQty", // Add this line

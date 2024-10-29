@@ -144,7 +144,7 @@ const MerchandisingDashboardContent: React.FC = () => {
           <h1 className="text-2xl font-semibold">Merchandising Dashboard</h1>
         </header>
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4">
+        <main className="flex-1 flex flex-col p-4 overflow-hidden">
           <div className="mb-4 flex flex-col space-y-4">
             <div className="flex space-x-4 items-center">
               <select 
@@ -180,46 +180,62 @@ const MerchandisingDashboardContent: React.FC = () => {
           </div>
 
           {!dateError && changes.length > 0 ? (
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sample ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Style</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Field</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">New Value</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Changed By</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Changed At</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {groupChangesBySample(changes).map(([sampleId, sampleChanges], groupIndex) => (
-                    <React.Fragment key={sampleId}>
-                      {sampleChanges.map((change, index) => (
-                        <tr key={`${sampleId}-${index}`} className={groupIndex % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
-                          {index === 0 && (
-                            <td rowSpan={sampleChanges.length} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-l-4 border-blue-500">
-                              {change.sampleId}
+            <div className="flex-1 bg-white shadow overflow-hidden sm:rounded-lg flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-white">
+                    <tr>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        Sample ID
+                      </th>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        Style
+                      </th>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        Field
+                      </th>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        New Value
+                      </th>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        Changed By
+                      </th>
+                      <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-white shadow-sm z-10">
+                        Changed At
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {groupChangesBySample(changes).map(([sampleId, sampleChanges], groupIndex) => (
+                      <React.Fragment key={sampleId}>
+                        {sampleChanges.map((change, index) => (
+                          <tr key={`${sampleId}-${index}`} className={groupIndex % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
+                            {index === 0 && (
+                              <td rowSpan={sampleChanges.length} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-l-4 border-blue-500">
+                                {change.sampleId}
+                              </td>
+                            )}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.style}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.field}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.newValue}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.changedBy}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {format(parseISO(change.changedAt), "HH:mm:ss 'on' dd/MM/yyyy")}
                             </td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.style}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.field}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.newValue}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.changedBy}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {format(parseISO(change.changedAt), "HH:mm:ss 'on' dd/MM/yyyy")}
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <p className="text-gray-500">
-              {dateError || 'No changes found for the selected date range.'}
-            </p>
+            <div className="flex-1 flex items-center justify-center bg-white shadow sm:rounded-lg">
+              <p className="text-gray-500">
+                {dateError || 'No changes found for the selected date range.'}
+              </p>
+            </div>
           )}
         </main>
       </div>

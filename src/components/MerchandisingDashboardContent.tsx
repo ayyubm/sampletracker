@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
 import { getDocuments } from '../lib/firebase/firebaseUtils';
-import { format, parseISO, isEqual, startOfDay } from 'date-fns';
+import { format, parseISO, isEqual, startOfDay, isBefore, isAfter, isSameDay } from 'date-fns';
 
 interface Buyer {
   id: string;
@@ -42,8 +42,10 @@ const MerchandisingDashboardContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [startDate, setStartDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [changes, setChanges] = useState<Change[]>([]);
+  const [dateError, setDateError] = useState<string>('');
 
   useEffect(() => {
     const fetchBuyers = async () => {
@@ -54,35 +56,49 @@ const MerchandisingDashboardContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchChangesForBuyer = async () => {
-      if (!selectedBuyerId || !selectedDate) return;
+    const validateAndFetchChanges = async () => {
+      if (!selectedBuyerId || !startDate || !endDate) return;
+
+      const startDateObj = startOfDay(parseISO(startDate));
+      const endDateObj = startOfDay(parseISO(endDate));
+
+      if (isAfter(startDateObj, endDateObj)) {
+        setDateError('Start date cannot be after end date');
+        setChanges([]);
+        return;
+      }
+
+      setDateError('');
 
       const allSamples = await getDocuments('samples') as Sample[];
       const buyerSamples = allSamples.filter(sample => sample.buyerId === selectedBuyerId);
       const selectedDateChanges: Change[] = [];
-
-      const selectedDateStart = startOfDay(parseISO(selectedDate));
 
       buyerSamples.forEach(sample => {
         const relevantFields = ['status', 'patternStatus', 'expectedCompletionDate'];
         
         relevantFields.forEach(field => {
           const changeInfo = sample.changeTracking[field];
-          if (changeInfo && isEqual(startOfDay(parseISO(changeInfo.timestamp)), selectedDateStart)) {
-            selectedDateChanges.push({
-              sampleId: sample.sampleId,
-              style: sample.style,
-              field,
-              newValue: sample[field as keyof Sample] as string,
-              changedBy: changeInfo.name,
-              changedAt: changeInfo.timestamp,
-            });
+          if (changeInfo) {
+            const changeDate = startOfDay(parseISO(changeInfo.timestamp));
+            if ((isAfter(changeDate, startDateObj) || isSameDay(changeDate, startDateObj)) && 
+                (isBefore(changeDate, endDateObj) || isSameDay(changeDate, endDateObj))) {
+              selectedDateChanges.push({
+                sampleId: sample.sampleId,
+                style: sample.style,
+                field,
+                newValue: sample[field as keyof Sample] as string,
+                changedBy: changeInfo.name,
+                changedAt: changeInfo.timestamp,
+              });
+            }
           }
         });
 
-        // Check for new remarks
         sample.remarks?.forEach(remark => {
-          if (isEqual(startOfDay(parseISO(remark.timestamp)), selectedDateStart)) {
+          const remarkDate = startOfDay(parseISO(remark.timestamp));
+          if ((isAfter(remarkDate, startDateObj) || isSameDay(remarkDate, startDateObj)) && 
+              (isBefore(remarkDate, endDateObj) || isSameDay(remarkDate, endDateObj))) {
             selectedDateChanges.push({
               sampleId: sample.sampleId,
               style: sample.style,
@@ -98,8 +114,8 @@ const MerchandisingDashboardContent: React.FC = () => {
       setChanges(selectedDateChanges);
     };
 
-    fetchChangesForBuyer();
-  }, [selectedBuyerId, selectedDate]);
+    validateAndFetchChanges();
+  }, [selectedBuyerId, startDate, endDate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -129,26 +145,41 @@ const MerchandisingDashboardContent: React.FC = () => {
         </header>
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4">
-          <div className="mb-4 flex space-x-4">
-            <select 
-              value={selectedBuyerId} 
-              onChange={(e) => setSelectedBuyerId(e.target.value)}
-              className="p-2 border rounded"
-            >
-              <option value="">Select a buyer</option>
-              {buyers.map(buyer => (
-                <option key={buyer.id} value={buyer.buyerId}>{buyer.name}</option>
-              ))}
-            </select>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="p-2 border rounded"
-            />
+          <div className="mb-4 flex flex-col space-y-4">
+            <div className="flex space-x-4 items-center">
+              <select 
+                value={selectedBuyerId} 
+                onChange={(e) => setSelectedBuyerId(e.target.value)}
+                className="p-2 border rounded"
+              >
+                <option value="">Select a buyer</option>
+                {buyers.map(buyer => (
+                  <option key={buyer.id} value={buyer.buyerId}>{buyer.name}</option>
+                ))}
+              </select>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">From:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="p-2 border rounded"
+                />
+                <span className="text-sm text-gray-600">To:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="p-2 border rounded"
+                />
+              </div>
+            </div>
+            {dateError && (
+              <div className="text-red-500 text-sm">{dateError}</div>
+            )}
           </div>
 
-          {changes.length > 0 ? (
+          {!dateError && changes.length > 0 ? (
             <div className="bg-white shadow overflow-hidden sm:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -186,7 +217,9 @@ const MerchandisingDashboardContent: React.FC = () => {
               </table>
             </div>
           ) : (
-            <p className="text-gray-500">No changes found for the selected date.</p>
+            <p className="text-gray-500">
+              {dateError || 'No changes found for the selected date range.'}
+            </p>
           )}
         </main>
       </div>

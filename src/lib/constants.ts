@@ -50,7 +50,8 @@ export const SAMPLE_TYPE_OPTIONS = [
   'R&D SAMPLE',
   'AESTHETIC APPROVAL SAMPLE',
   'WASH APPROVAL SAMPLE',
-  'TRIAL SAMPLE'
+  'TRIAL SAMPLE',
+  'MOCKUP'
 ];
 
 export const STATUS_OPTIONS = ['New', 'Fabric Under Washing', 'Under Cutting', 'Cutting Ready', 'Under Sewing', 'Sewing Ready', 

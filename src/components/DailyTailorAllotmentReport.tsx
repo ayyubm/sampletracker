@@ -25,9 +25,15 @@ interface BuyerData {
 }
 
 interface Sample {
+  id: string;
+  sampleId: string;
   buyerId: string;
+  style: string;
   typeOfSample: string;
+  fabricTrimsReceiptDate: string;
+  status: string;
   noOfPieces: number;
+  isArchived: boolean;
 }
 
 const DailyTailorAllotmentReport: React.FC = () => {
@@ -55,13 +61,19 @@ const DailyTailorAllotmentReport: React.FC = () => {
       const buyers = await getDocuments('buyer');
       
       // Fetch samples
-      const samples = await getDocuments('samples');
+      const samples = await getDocuments('samples') as Sample[];
 
       // Process sample counts
       const sampleCounts: { [buyerId: string]: SampleCount } = {};
-      samples.forEach((sample: any) => {
+      samples.forEach((sample) => {
         // Check if the sample is not archived before counting it
-        if (!sample.isArchived) {
+        if (
+          sample.fabricTrimsReceiptDate &&
+          sample.fabricTrimsReceiptDate <= selectedDate &&
+          sample.status !== 'Garment Ready' &&
+          sample.status !== 'Dispatched' &&
+          (sample.isArchived === undefined || sample.isArchived === false)
+        ) {
           if (!sampleCounts[sample.buyerId]) {
             sampleCounts[sample.buyerId] = { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 };
           }
@@ -122,7 +134,7 @@ const DailyTailorAllotmentReport: React.FC = () => {
         <button onClick={toggleSidebar} className="mr-4">
           <Menu size={24} />
         </button>
-        <h1 className="text-2xl font-bold">Buyer Wise Sample Report</h1>
+        <h1 className="text-2xl font-bold">Total Pending Samples Report</h1>
       </div>
       <div className="mb-4">
         <label htmlFor="date" className="mr-2">Select Date:</label>

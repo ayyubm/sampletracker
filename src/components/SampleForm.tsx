@@ -36,10 +36,6 @@ interface Sample {
   requiredCompletionDate: string;
   expectedCompletionDate: string;
   actualSampleReceivedDate: string;
-  cutQty: number;
-  shipQty: number;
-  rejectQty: number;
-  alterQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };

@@ -29,6 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
   };
 
   const canAccessAssignTailors = userData?.isAdmin || userData?.team === 'Sampling';
+  const canAccessDailyOutput = userData?.isAdmin || userData?.team === 'Sampling';
+  const canAccessArchived = userData?.isAdmin || userData?.team === 'Merchandising';
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
@@ -48,10 +50,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             Assign Tailors
           </button>
         )}
-        <button onClick={() => handleNavigation('/daily-sampling-output')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <Clipboard size={18} className="inline-block mr-2" />
-          Daily Output
-        </button>
+        {canAccessDailyOutput && (
+          <button onClick={() => handleNavigation('/daily-sampling-output')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <Clipboard size={18} className="inline-block mr-2" />
+            Daily Output
+          </button>
+        )}
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <FileText size={18} className="inline-block mr-2" />
           Pending Samples Report
@@ -76,10 +80,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             User Management
           </button>
         )}
-        <button onClick={() => handleNavigation('/archived-samples')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <Archive size={18} className="inline-block mr-2" />
-          Archived Samples
-        </button>
+        {canAccessArchived && (
+          <button onClick={() => handleNavigation('/archived-samples')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <Archive size={18} className="inline-block mr-2" />
+            Archived Samples
+          </button>
+        )}
         <button
           onClick={handleSignOut}
           className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"

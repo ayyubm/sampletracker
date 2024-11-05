@@ -5,7 +5,6 @@ import { getDocuments } from '../lib/firebase/firebaseUtils';
 import { format, subDays } from 'date-fns';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
-import { Button } from './ui/button';
 import React from 'react';
 
 interface Sample {
@@ -207,7 +206,7 @@ export default function DailySamplingStatus() {
     if (type === 'FIT') return 'Fit';
     if (type === 'PP') return 'PP';
     if (type === 'GPT') return 'GPT';
-    if (type === 'SMS/SRS/PA/COLOUR RUN') return 'SMS';
+    if (type === "SMS/SRS/PA/COLOUR RUN") return "SMS";
     if (type === 'PROTO/COUNTER') return 'Proto';
     return 'Other';
   };
@@ -257,7 +256,7 @@ export default function DailySamplingStatus() {
                 </div>
               </div>
               <div className="bg-white p-3 rounded-lg shadow">
-                <div className="text-sm text-gray-500">Today's Output</div>
+                <div className="text-sm text-gray-500">Today&apos;s Output</div>
                 <div className="text-xl font-bold text-green-600">{dailySummary.totalOutput}</div>
               </div>
               <div className="bg-white p-3 rounded-lg shadow">
@@ -337,7 +336,7 @@ export default function DailySamplingStatus() {
                     <span className="text-right font-medium">
                       {buyer.openingBalance.total + buyer.newIndents.total}
                     </span>
-                    <span>Today's Output:</span>
+                    <span>Today&apos;s Output:</span>
                     <span className="text-right font-medium text-green-600">
                       {buyer.todaysOutput}
                     </span>

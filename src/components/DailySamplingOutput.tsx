@@ -7,6 +7,8 @@ import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { Button } from './ui/button';
 import Alert from './Alert';
+import { useAuth } from '../lib/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 interface Buyer {
   id: string;
@@ -102,6 +104,8 @@ const defaultSampleTypeOutput: SampleTypeOutput = {
 };
 
 export default function DailySamplingOutput() {
+  const { userData } = useAuth();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedBuyer, setSelectedBuyer] = useState<string>('');
@@ -131,6 +135,16 @@ export default function DailySamplingOutput() {
   });
 
   useEffect(() => {
+    if (!userData) {
+      router.push('/login');
+      return;
+    }
+
+    if (!userData.isAdmin && userData.team !== 'Sampling') {
+      router.push('/');
+      return;
+    }
+
     const fetchBuyers = async () => {
       const buyersData = await getDocuments('buyer') as Buyer[];
       setBuyers(buyersData);
@@ -148,7 +162,7 @@ export default function DailySamplingOutput() {
     };
 
     fetchBuyers();
-  }, [selectedBuyer, selectedDate]);
+  }, [userData, router, selectedBuyer, selectedDate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -397,6 +411,10 @@ export default function DailySamplingOutput() {
       setIsSavingTailors(false);
     }
   };
+
+  if (!userData || (!userData.isAdmin && userData.team !== 'Sampling')) {
+    return null;
+  }
 
   if (loading) {
     return <div>Loading...</div>;

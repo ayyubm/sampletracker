@@ -49,10 +49,6 @@ interface SampleData {
   requiredCompletionDate: string;
   expectedCompletionDate: string;
   actualSampleReceivedDate: string;
-  cutQty: number;
-  alterQty: number;
-  rejectQty: number;
-  shipQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
@@ -90,10 +86,6 @@ const defaultSampleData: SampleData = {
   requiredCompletionDate: '',
   expectedCompletionDate: '',
   actualSampleReceivedDate: '',
-  cutQty: 0,
-  alterQty: 0,
-  rejectQty: 0,
-  shipQty: 0,
   changeTracking: {},
   remarks: [],
 };
@@ -224,10 +216,6 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'requiredCompletionDate',
     'expectedCompletionDate',
     'actualSampleReceivedDate',
-    'cutQty',
-    'alterQty',
-    'rejectQty',
-    'shipQty',
   ];
 
   const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
@@ -250,7 +238,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </label>
-                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'cutQty' || key === 'shipQty' || key === 'rejectQty' || key === 'alterQty' || key === 'requiredFabricQty' || key === 'procuredFabricQtyIssued' || key === 'stockFabricQtyIssued' ? (
+                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'requiredFabricQty' || key === 'procuredFabricQtyIssued' || key === 'stockFabricQtyIssued' ? (
                   <input
                     type="number"
                     min="0"

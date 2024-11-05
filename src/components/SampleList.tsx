@@ -16,8 +16,9 @@ import {
   PATTERN_STATUS_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
-import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive } from "lucide-react";
+import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive, BarChart } from "lucide-react";
 import RemarkModal from "./RemarkModal";
+import ProductionSummaryModal from "./ProductionSummaryModal";
 
 interface ChangeInfo {
   name: string;
@@ -52,10 +53,6 @@ interface Sample {
   requiredCompletionDate: string;
   expectedCompletionDate: string;
   actualSampleReceivedDate: string;
-  cutQty: number;
-  alterQty: number;
-  rejectQty: number;
-  shipQty: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
@@ -160,6 +157,8 @@ const SampleList: React.FC<SampleListProps> = ({
   const [buyers, setBuyers] = useState<Buyer[]>([]);
 
   const [archiveConfirmation, setArchiveConfirmation] = useState<string | null>(null);
+
+  const [selectedSampleForProduction, setSelectedSampleForProduction] = useState<string | null>(null);
 
   const fetchSamples = useCallback(async () => {
     const fetchedSamples = await getDocuments("samples");
@@ -378,10 +377,6 @@ const SampleList: React.FC<SampleListProps> = ({
       "requiredCompletionDate",
       "expectedCompletionDate",
       "actualSampleReceivedDate",
-      "cutQty",
-      "alterQty",
-      "rejectQty",
-      "shipQty",
       "patternNo",
       "color",
       "patternStatus",
@@ -566,7 +561,7 @@ const SampleList: React.FC<SampleListProps> = ({
             ))}
           </select>
         );
-      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'cutQty' || field === 'shipQty' || field === 'rejectQty' || field === 'alterQty' || field === 'requiredFabricQty' || field === 'procuredFabricQtyIssued' || field === 'stockFabricQtyIssued') {
+      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'requiredFabricQty' || field === 'procuredFabricQtyIssued' || field === 'stockFabricQtyIssued') {
         return (
           <input
             type="number"
@@ -918,10 +913,6 @@ const SampleList: React.FC<SampleListProps> = ({
                       ))}
                   </button>
                 </th>
-                <th className="py-3 px-6 text-left">Cut Qty</th>
-                <th className="py-3 px-6 text-left">Alter Qty</th>
-                <th className="py-3 px-6 text-left">Reject Qty</th>
-                <th className="py-3 px-6 text-left">Ship Qty</th>
                 <th className="py-3 px-6 text-center sticky right-0 bg-gray-200 z-20">
                   Actions
                 </th>
@@ -964,10 +955,6 @@ const SampleList: React.FC<SampleListProps> = ({
                       "requiredCompletionDate",
                       "expectedCompletionDate",
                       "actualSampleReceivedDate",
-                      "cutQty",
-                      "alterQty",
-                      "rejectQty",
-                      "shipQty",
                     ].map((field) => (
                       <td key={field} className="py-3 px-6 text-left">
                         {renderCell(sample, field)}
@@ -997,12 +984,21 @@ const SampleList: React.FC<SampleListProps> = ({
                           <MessageSquare size={18} />
                         </button>
                         <button
-                          onClick={(e) => handleArchive(e, sample.id)}
-                          className="text-yellow-600 hover:text-yellow-900"
-                          title="Archive"
+                          onClick={() => setSelectedSampleForProduction(sample.sampleId)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                          title="Production Summary"
                         >
-                          <Archive size={18} />
+                          <BarChart size={18} />
                         </button>
+                        {(userData?.isAdmin || userData?.team === 'Merchandising') && (
+                          <button
+                            onClick={(e) => handleArchive(e, sample.id)}
+                            className="text-yellow-600 hover:text-yellow-900"
+                            title="Archive"
+                          >
+                            <Archive size={18} />
+                          </button>
+                        )}
                         {userData?.isAdmin && (
                           <button
                             onClick={(e) => handleDelete(e, sample.id)}
@@ -1115,6 +1111,12 @@ const SampleList: React.FC<SampleListProps> = ({
               </div>
             </div>
           </div>
+        )}
+        {selectedSampleForProduction && (
+          <ProductionSummaryModal
+            sampleId={selectedSampleForProduction}
+            onClose={() => setSelectedSampleForProduction(null)}
+          />
         )}
       </div>
     </div>

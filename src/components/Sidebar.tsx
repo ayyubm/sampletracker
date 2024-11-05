@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart2, ClipboardList } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -49,12 +49,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           </button>
         )}
         <button onClick={() => handleNavigation('/daily-sampling-output')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-          <ClipboardList size={18} className="inline-block mr-2" />
+          <Clipboard size={18} className="inline-block mr-2" />
           Daily Output
         </button>
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <FileText size={18} className="inline-block mr-2" />
           Pending Samples Report
+        </button>
+        <button onClick={() => handleNavigation('/daily-sampling-status')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <FileText size={18} className="inline-block mr-2" />
+          Daily Sampling Status
         </button>
         <button onClick={() => handleNavigation('/merchandising-dashboard')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <BarChart2 size={18} className="inline-block mr-2" />

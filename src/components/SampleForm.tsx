@@ -74,18 +74,30 @@ interface ChangeInfo {
 }
 
 async function generateSampleId(): Promise<string> {
-  const samples: Sample[] = await getDocuments('samples');
-  const maxId = samples.reduce((max, sample) => {
-    if (sample.sampleId && typeof sample.sampleId === 'string') {
-      const parts = sample.sampleId.split('-');
-      if (parts.length > 1) {
-        const id = parseInt(parts[1]);
-        return isNaN(id) ? max : Math.max(max, id);
-      }
-    }
-    return max;
-  }, 0);
-  return `SAMPLE-${(maxId + 1).toString().padStart(4, '0')}`;
+  const now = new Date();
+  
+  // Get year and month components
+  const year = now.getFullYear().toString().slice(-1);  // Last digit of year
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');  // 01-12
+  
+  // Create a unique 3-digit sequence using:
+  // - Hours (00-23) -> first digit
+  // - Minutes (00-59) -> second digit
+  // - Milliseconds (000-999) -> last digit
+  const hours = now.getHours().toString();
+  const minutes = now.getMinutes().toString();
+  const ms = now.getMilliseconds().toString().padStart(3, '0');
+  
+  // Create 3-digit timestamp sequence
+  const timeSeq = (
+    parseInt(hours + minutes + ms) % 1000  // Ensure it's 3 digits
+  ).toString().padStart(3, '0');
+  
+  // Generate random number (0-9)
+  const randomDigit = Math.floor(Math.random() * 10);
+  
+  // Format: SAM-YMM-TTTR
+  return `S-${year}${month}-${timeSeq}${randomDigit}`;
 }
 
 export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: SampleFormProps) {

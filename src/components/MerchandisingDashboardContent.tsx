@@ -38,6 +38,17 @@ interface Change {
   changedAt: string;
 }
 
+const formatDateValue = (value: string, field: string): string => {
+  if (field === 'Fabric & Trims Receipt Date' || field === 'expectedCompletionDate') {
+    try {
+      return format(parseISO(value), 'dd/MM/yyyy');
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
+
 const MerchandisingDashboardContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
@@ -75,7 +86,12 @@ const MerchandisingDashboardContent: React.FC = () => {
       const selectedDateChanges: Change[] = [];
 
       buyerSamples.forEach(sample => {
-        const relevantFields = ['status', 'patternStatus', 'expectedCompletionDate'];
+        const relevantFields = [
+          'status', 
+          'patternStatus', 
+          'expectedCompletionDate',
+          'fabricTrimsReceiptDate'
+        ];
         
         relevantFields.forEach(field => {
           const changeInfo = sample.changeTracking[field];
@@ -86,8 +102,11 @@ const MerchandisingDashboardContent: React.FC = () => {
               selectedDateChanges.push({
                 sampleId: sample.sampleId,
                 style: sample.style,
-                field,
-                newValue: sample[field as keyof Sample] as string,
+                field: field === 'fabricTrimsReceiptDate' ? 'Fabric & Trims Receipt Date' : field,
+                newValue: formatDateValue(
+                  sample[field as keyof Sample] as string,
+                  field === 'fabricTrimsReceiptDate' ? 'Fabric & Trims Receipt Date' : field
+                ),
                 changedBy: changeInfo.name,
                 changedAt: changeInfo.timestamp,
               });

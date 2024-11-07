@@ -419,6 +419,18 @@ const SampleList: React.FC<SampleListProps> = ({
     if (editingCell && userData) {
       const { id, field } = editingCell;
       const sample = samples.find((s) => s.id === id);
+      
+      // Check if this is a date field
+      const isDateField = field.includes('Date');
+      
+      // For date fields, only prevent saving if:
+      // - Current value is empty AND new value is empty
+      if (isDateField && !editValue && !sample?.[field as keyof Sample]) {
+        setEditingCell(null);
+        return;
+      }
+
+      // Only proceed if there's actually a change
       if (sample && sample[field as keyof Sample] !== editValue) {
         try {
           const changeInfo: ChangeInfo = {

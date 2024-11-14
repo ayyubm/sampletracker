@@ -160,6 +160,19 @@ const SampleList: React.FC<SampleListProps> = ({
 
   const [selectedSampleForProduction, setSelectedSampleForProduction] = useState<string | null>(null);
 
+  const [buyerSearch, setBuyerSearch] = useState("");
+
+  const filteredBuyers = useMemo(() => {
+    return buyers
+      .map(b => b.name)
+      .filter((buyer) =>
+        buyer && buyerSearch
+          ? buyer.toLowerCase().includes(buyerSearch.toLowerCase())
+          : true
+      )
+      .sort((a, b) => (a && b ? a.localeCompare(b) : 0));
+  }, [buyers, buyerSearch]);
+
   const fetchSamples = useCallback(async () => {
     const fetchedSamples = await getDocuments("samples");
     setSamples(fetchedSamples as Sample[]);
@@ -323,6 +336,19 @@ const SampleList: React.FC<SampleListProps> = ({
       className="w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 max-h-60 overflow-auto"
       onClick={(e) => e.stopPropagation()}
     >
+      {filterName === "buyer" && (
+        <div className="p-2">
+          <input
+            type="text"
+            value={buyerSearch}
+            onChange={(e) => setBuyerSearch(e.target.value)}
+            placeholder="Search buyers..."
+            className="w-full p-2 border rounded"
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       <div
         className="py-1"
         role="menu"
@@ -335,15 +361,26 @@ const SampleList: React.FC<SampleListProps> = ({
         >
           All
         </div>
-        {options.map((option) => (
-          <div
-            key={option}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"
-            onClick={() => handleFilterChange(filterName, option)}
-          >
-            {option}
-          </div>
-        ))}
+        {filterName === "buyer" 
+          ? filteredBuyers.map((option) => (
+              <div
+                key={option}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"
+                onClick={() => handleFilterChange(filterName, option)}
+              >
+                {option}
+              </div>
+            ))
+          : options.map((option) => (
+              <div
+                key={option}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"
+                onClick={() => handleFilterChange(filterName, option)}
+              >
+                {option}
+              </div>
+            ))
+        }
       </div>
     </div>
   );
@@ -758,22 +795,25 @@ const SampleList: React.FC<SampleListProps> = ({
     setArchiveConfirmation(null);
   };
 
+  useEffect(() => {
+    if (!activeFilter) {
+      setBuyerSearch("");
+    }
+  }, [activeFilter]);
+
   return (
     <div className="h-full overflow-hidden">
       <div className="overflow-x-auto h-full">
         <div className="overflow-y-auto h-full border-b border-gray-300">
           <table className="min-w-full bg-white">
-            <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal sticky top-0 z-10">
+            <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal sticky top-0 z-30">
               <tr>
-                <th className="py-3 px-6 text-left sticky left-0 bg-gray-200 z-20">
-                  Sample ID
-                </th>
-                <th className="py-3 px-6 text-left">
+                <th className="py-3 px-6 text-left sticky left-0 bg-gray-200 z-40 w-[140px]">
                   <button
                     onClick={() => handleSort("timestamp")}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Timestamp
+                    Sample ID
                     {sortConfig.key === "timestamp" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp size={20} />
@@ -782,38 +822,14 @@ const SampleList: React.FC<SampleListProps> = ({
                       ))}
                   </button>
                 </th>
-                <th className="py-3 px-6 text-left">
+                <th className="py-3 px-6 text-left sticky left-[169px] bg-gray-200 z-40 w-[140px]">
                   <button
-                    onClick={(e) => handleFilterClick("status", e)}
+                    ref={styleButtonRef}
+                    onClick={handleStyleFilterClick}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Status {filters.status && `(${filters.status})`}
+                    Style {filters.style && `(${filters.style})`}
                     <ChevronDownIcon />
-                  </button>
-                </th>
-                <th className="py-3 px-6 text-left">Sample Priority No.</th>
-                <th className="py-3 px-6 text-left">Pattern No.</th>
-                <th className="py-3 px-6 text-left">
-                  <button
-                    onClick={(e) => handleFilterClick("patternStatus", e)}
-                    className="font-bold hover:text-gray-900 flex items-center"
-                  >
-                    Pattern Status {filters.patternStatus && `(${filters.patternStatus})`}
-                    <ChevronDownIcon />
-                  </button>
-                </th>
-                <th className="py-3 px-6 text-left">
-                  <button
-                    onClick={() => handleSort("buyerRequestDate")}
-                    className="font-bold hover:text-gray-900 flex items-center"
-                  >
-                    Buyer Request Date
-                    {sortConfig.key === "buyerRequestDate" &&
-                      (sortConfig.direction === "asc" ? (
-                        <ArrowUp size={40} />
-                      ) : (
-                        <ArrowDown size={40} />
-                      ))}
                   </button>
                 </th>
                 <th className="py-3 px-6 text-left">
@@ -827,15 +843,24 @@ const SampleList: React.FC<SampleListProps> = ({
                 </th>
                 <th className="py-3 px-6 text-left">
                   <button
-                    ref={styleButtonRef}
-                    onClick={handleStyleFilterClick}
+                    onClick={(e) => handleFilterClick("status", e)}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Style {filters.style && `(${filters.style})`}
+                    Status {filters.status && `(${filters.status})`}
                     <ChevronDownIcon />
                   </button>
                 </th>
-                <th className="py-3 px-6 text-left">Season</th>
+                
+                <th className="py-3 px-6 text-left">Pattern No.</th>
+                <th className="py-3 px-6 text-left">
+                  <button
+                    onClick={(e) => handleFilterClick("patternStatus", e)}
+                    className="font-bold hover:text-gray-900 flex items-center"
+                  >
+                    Pattern Status {filters.patternStatus && `(${filters.patternStatus})`}
+                    <ChevronDownIcon />
+                  </button>
+                </th>
                 <th className="py-3 px-6 text-left">
                   <button
                     onClick={(e) => handleFilterClick("typeOfSample", e)}
@@ -846,28 +871,7 @@ const SampleList: React.FC<SampleListProps> = ({
                     <ChevronDownIcon />
                   </button>
                 </th>
-                <th className="py-3 px-6 text-left">Type of Fabric</th>
-                <th className="py-3 px-6 text-left">Color</th>
-                <th className="py-3 px-6 text-left">Size</th>
-                <th className="py-3 px-6 text-left">Wash Type</th>
                 <th className="py-3 px-6 text-left">No. of Pieces</th>
-                <th className="py-3 px-6 text-left">Required Fabric Qty</th>
-                <th className="py-3 px-6 text-left">Procured Fabric Qty Issued</th>
-                <th className="py-3 px-6 text-left">Stock Fabric Qty Issued</th>
-                <th className="py-3 px-6 text-left">
-                  <button
-                    onClick={() => handleSort("fabricIssueDate")}
-                    className="font-bold hover:text-gray-900 flex items-center"
-                  >
-                    Fabric Issue Date
-                    {sortConfig.key === "fabricIssueDate" &&
-                      (sortConfig.direction === "asc" ? (
-                        <ArrowUp size={40} className="ml-1" />
-                      ) : (
-                        <ArrowDown size={40} className="ml-1" />
-                      ))}
-                  </button>
-                </th>
                 <th className="py-3 px-6 text-left">
                   <button
                     onClick={() => handleSort("fabricTrimsReceiptDate")}
@@ -882,7 +886,6 @@ const SampleList: React.FC<SampleListProps> = ({
                       ))}
                   </button>
                 </th>
-                <th className="py-3 px-6 text-left">Fabric Reject Qty</th>
                 <th className="py-3 px-6 text-left">
                   <button
                     onClick={() => handleSort("requiredCompletionDate")}
@@ -925,7 +928,37 @@ const SampleList: React.FC<SampleListProps> = ({
                       ))}
                   </button>
                 </th>
-                <th className="py-3 px-6 text-center sticky right-0 bg-gray-200 z-20">
+                <th className="py-3 px-6 text-left">Sample Priority No.</th>
+                
+                
+                <th className="py-3 px-6 text-left">Season</th>
+                
+                <th className="py-3 px-6 text-left">Type of Fabric</th>
+                <th className="py-3 px-6 text-left">Color</th>
+                <th className="py-3 px-6 text-left">Size</th>
+                <th className="py-3 px-6 text-left">Wash Type</th>
+                
+                <th className="py-3 px-6 text-left">Required Fabric Qty</th>
+                <th className="py-3 px-6 text-left">Procured Fabric Qty Issued</th>
+                <th className="py-3 px-6 text-left">Stock Fabric Qty Issued</th>
+                <th className="py-3 px-6 text-left">
+                  <button
+                    onClick={() => handleSort("fabricIssueDate")}
+                    className="font-bold hover:text-gray-900 flex items-center"
+                  >
+                    Fabric Issue Date
+                    {sortConfig.key === "fabricIssueDate" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ArrowUp size={40} className="ml-1" />
+                      ) : (
+                        <ArrowDown size={40} className="ml-1" />
+                      ))}
+                  </button>
+                </th>
+                
+                <th className="py-3 px-6 text-left">Fabric Reject Qty</th>
+                
+                <th className="py-3 px-6 text-center sticky right-0 bg-gray-200 z-40">
                   Actions
                 </th>
               </tr>
@@ -937,42 +970,51 @@ const SampleList: React.FC<SampleListProps> = ({
                     key={sample.id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-3 px-6 text-left whitespace-nowrap sticky left-0 bg-white">
-                      {sample.sampleId}
+                    <td className="py-3 px-6 text-left whitespace-nowrap sticky left-0 bg-white z-20 w-[140px]">
+                      <div>
+                        {sample.sampleId}
+                        <div className="text-xs text-gray-500">
+                          {formatTimestamp(sample.timestamp)}
+                        </div>
+                      </div>
                     </td>
-                    <td className="py-3 px-6 text-left">
-                      {formatTimestamp(sample.timestamp)}
+                    <td className="py-3 px-6 text-left sticky left-[169px] bg-white z-20 w-[140px]">
+                      {renderCell(sample, "style")}
                     </td>
                     {[
-                      "status",
-                      "samplePriorityNo",
-                      "patternNo", // Include patternNo here
-                      "patternStatus", // Add this line
-                      "buyerRequestDate",
                       "buyer",
-                      "style",
-                      "season",
+                      "status",
+                      
+                      "patternNo",
+                      "patternStatus",
                       "typeOfSample",
-                      "typeOfFabric",
-                      "color", // Include color here
-                      "size", // Add this line
-                      "washType", // Add this line
                       "noOfPieces",
+                      "fabricTrimsReceiptDate",
+                      "requiredCompletionDate",
+                      "expectedCompletionDate",
+                      "actualSampleReceivedDate",
+                      "samplePriorityNo",
+                      
+                      "season",
+                      
+                      "typeOfFabric",
+                      "color",
+                      "size",
+                      "washType",
+                      
                       "requiredFabricQty",
                       "procuredFabricQtyIssued",
                       "stockFabricQtyIssued",
                       "fabricIssueDate",
-                      "fabricTrimsReceiptDate",
-                      "fabricRejectQty", // Add this line
-                      "requiredCompletionDate",
-                      "expectedCompletionDate",
-                      "actualSampleReceivedDate",
+                      
+                      "fabricRejectQty",
+                      
                     ].map((field) => (
                       <td key={field} className="py-3 px-6 text-left">
                         {renderCell(sample, field)}
                       </td>
                     ))}
-                    <td className="py-3 px-6 text-center sticky right-0 bg-white">
+                    <td className="py-3 px-6 text-center sticky right-0 bg-white z-20">
                       <div className="flex justify-center items-center space-x-2">
                         <button
                           onClick={() => setSelectedSample(sample.id)}
@@ -1026,7 +1068,7 @@ const SampleList: React.FC<SampleListProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={25} className="py-4 text-center">
+                  <td colSpan={24} className="py-4 text-center">
                     No samples available. Please add new samples.
                   </td>
                 </tr>

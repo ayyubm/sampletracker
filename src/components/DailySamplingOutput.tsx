@@ -86,6 +86,21 @@ interface StoredSampleOutput {
   };
 }
 
+interface PreviousOutput {
+  date: string;
+  buyerId: string;
+  outputs: {
+    [sampleId: string]: {
+      CUT: number;
+      SEW: number;
+      FINISH: number;
+      ALTER: number;
+      PASS: number;
+      REJECT: number;
+    };
+  };
+}
+
 const defaultDailyOutput: DailyOutput = {
   CUT: 0,
   SEW: 0,
@@ -124,6 +139,7 @@ export default function DailySamplingOutput() {
   const [isSaving, setIsSaving] = useState<{ [key: string]: boolean }>({});
   const [tailorsAssigned, setTailorsAssigned] = useState<number>(0);
   const [isSavingTailors, setIsSavingTailors] = useState(false);
+  const [totalSewnPieces, setTotalSewnPieces] = useState<{ [sampleId: string]: number }>({});
   const [alert, setAlert] = useState<{
     show: boolean;
     message: string;
@@ -185,6 +201,18 @@ export default function DailySamplingOutput() {
         Other: 0
       };
 
+      const allOutputs = await getDocuments('dailySamplingOutputs') as PreviousOutput[];
+      const previousOutputs = allOutputs.filter(
+        output => output.buyerId === selectedBuyer && output.date < selectedDate
+      );
+
+      const totalSewnPieces: { [sampleId: string]: number } = {};
+      previousOutputs.forEach(output => {
+        Object.entries(output.outputs).forEach(([sampleId, sampleOutput]) => {
+          totalSewnPieces[sampleId] = (totalSewnPieces[sampleId] || 0) + sampleOutput.SEW;
+        });
+      });
+      setTotalSewnPieces(totalSewnPieces);
       samples.forEach(sample => {
         if (
           sample.buyerId === selectedBuyer &&
@@ -196,7 +224,10 @@ export default function DailySamplingOutput() {
         ) {
           const sampleType = getSampleType(sample.typeOfSample);
           grouped[sampleType].push(sample);
-          pendingCounts[sampleType] += Number(sample.noOfPieces || 0);
+          
+          const previouslySewn = totalSewnPieces[sample.sampleId] || 0;
+          const remainingPieces = Math.max(0, Number(sample.noOfPieces || 0) - previouslySewn);
+          pendingCounts[sampleType] += remainingPieces;
         }
       });
 
@@ -530,7 +561,10 @@ export default function DailySamplingOutput() {
                             Receipt Date
                           </th>
                           <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
-                            Pieces
+                            Total Pieces
+                          </th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
+                            Pending Pieces
                           </th>
                           {Object.keys(defaultDailyOutput).map((stage) => (
                             <th key={stage} className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
@@ -564,7 +598,8 @@ export default function DailySamplingOutput() {
                             <td className="px-4 py-2 text-sm">
                               {format(new Date(sample.fabricTrimsReceiptDate), 'dd/MM/yyyy')}
                             </td>
-                            <td className="px-4 py-2 text-sm">{sample.noOfPieces}</td>
+                            <td className="px-4 py-2 text-sm">{Number(sample.noOfPieces)}</td>
+                            <td className="px-4 py-2 text-sm">{Math.max(0, Number(sample.noOfPieces || 0) - (totalSewnPieces[sample.sampleId] || 0))}</td>
                             {Object.keys(defaultDailyOutput).map((stage) => (
                               <td key={stage} className="px-4 py-2">
                                 <input

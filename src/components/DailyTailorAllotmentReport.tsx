@@ -36,6 +36,22 @@ interface Sample {
   isArchived: boolean;
 }
 
+interface SamplingOutput {
+  id: string;
+  date: string;
+  buyerId: string;
+  outputs: {
+    [sampleId: string]: {
+      CUT: number;
+      SEW: number;
+      FINISH: number;
+      ALTER: number;
+      PASS: number;
+      REJECT: number;
+    };
+  };
+}
+
 const DailyTailorAllotmentReport: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -63,10 +79,22 @@ const DailyTailorAllotmentReport: React.FC = () => {
       // Fetch samples
       const samples = await getDocuments('samples') as Sample[];
 
+      // Fetch all sampling outputs
+      const samplingOutputs = await getDocuments('dailySamplingOutputs') as SamplingOutput[];
+
+      // Calculate total sewn pieces per sample
+      const totalSewnPieces: { [sampleId: string]: number } = {};
+      samplingOutputs.forEach(output => {
+        if (output.date <= selectedDate) {
+          Object.entries(output.outputs).forEach(([sampleId, sampleOutput]) => {
+            totalSewnPieces[sampleId] = (totalSewnPieces[sampleId] || 0) + sampleOutput.SEW;
+          });
+        }
+      });
+
       // Process sample counts
       const sampleCounts: { [buyerId: string]: SampleCount } = {};
       samples.forEach((sample) => {
-        // Check if the sample is not archived before counting it
         if (
           sample.fabricTrimsReceiptDate &&
           sample.fabricTrimsReceiptDate <= selectedDate &&
@@ -77,22 +105,26 @@ const DailyTailorAllotmentReport: React.FC = () => {
           if (!sampleCounts[sample.buyerId]) {
             sampleCounts[sample.buyerId] = { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 };
           }
+          
           const sampleType = sample.typeOfSample.toUpperCase();
-          const pieceCount = Number(sample.noOfPieces) || 0;
+          const totalPieces = Number(sample.noOfPieces) || 0;
+          const sewnPieces = totalSewnPieces[sample.sampleId] || 0;
+          const remainingPieces = Math.max(0, totalPieces - sewnPieces);
+
           if (sampleType === 'SMS/SRS/PA/COLOUR RUN') {
-            sampleCounts[sample.buyerId].SMS += pieceCount;
+            sampleCounts[sample.buyerId].SMS += remainingPieces;
           }
           else if (sampleType === 'FIT') {
-            sampleCounts[sample.buyerId].FIT += pieceCount;
+            sampleCounts[sample.buyerId].FIT += remainingPieces;
           }
           else if (sampleType === 'PP') {
-            sampleCounts[sample.buyerId].PP += pieceCount;
+            sampleCounts[sample.buyerId].PP += remainingPieces;
           }
           else if (sampleType === 'GPT') {
-            sampleCounts[sample.buyerId].GPT += pieceCount;
+            sampleCounts[sample.buyerId].GPT += remainingPieces;
           }
           else {
-            sampleCounts[sample.buyerId].Other += pieceCount;
+            sampleCounts[sample.buyerId].Other += remainingPieces;
           }
         }
       });
@@ -117,6 +149,21 @@ const DailyTailorAllotmentReport: React.FC = () => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const calculateTotals = () => {
+    return reportData.reduce(
+      (totals, data) => ({
+        FIT: totals.FIT + data.sampleCounts.FIT,
+        PP: totals.PP + data.sampleCounts.PP,
+        GPT: totals.GPT + data.sampleCounts.GPT,
+        SMS: totals.SMS + data.sampleCounts.SMS,
+        Other: totals.Other + data.sampleCounts.Other,
+        totalSamples: totals.totalSamples + Object.values(data.sampleCounts).reduce((a, b) => a + b, 0),
+        tailorsAssigned: totals.tailorsAssigned + data.tailorsAssigned,
+      }),
+      { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, totalSamples: 0, tailorsAssigned: 0 }
+    );
   };
 
   if (loading) {
@@ -152,49 +199,59 @@ const DailyTailorAllotmentReport: React.FC = () => {
         <p>No data available for the selected date.</p>
       )}
       {reportData.length > 0 && (
-        <div className="flex-grow overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            <table className="w-full border-collapse border table-fixed">
-              <colgroup>
-                <col className="w-1/4" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-                <col className="w-1/12" />
-              </colgroup>
-              <thead className="bg-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="border p-2 sticky left-0 bg-gray-200 z-20 text-center">Buyer</th>
-                  <th className="border p-2 text-center">FIT</th>
-                  <th className="border p-2 text-center">PP</th>
-                  <th className="border p-2 text-center">GPT</th>
-                  <th className="border p-2 text-center">SMS</th>
-                  <th className="border p-2 text-center">Other</th>
-                  <th className="border p-2 text-center">Total Samples</th>
-                  <th className="border p-2 text-center">Tailors Assigned</th>
+        <div className="flex-grow overflow-auto relative">
+          <table className="w-full border-collapse border table-fixed">
+            <colgroup>
+              <col className="w-[25%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+              <col className="w-[10.714%]" />
+            </colgroup>
+            <thead className="bg-gray-200 sticky top-0 z-10">
+              <tr>
+                <th className="border p-2 sticky left-0 bg-gray-200 z-20 text-center whitespace-nowrap">Buyer</th>
+                <th className="border p-2 text-center whitespace-nowrap">FIT</th>
+                <th className="border p-2 text-center whitespace-nowrap">PP</th>
+                <th className="border p-2 text-center whitespace-nowrap">GPT</th>
+                <th className="border p-2 text-center whitespace-nowrap">SMS</th>
+                <th className="border p-2 text-center whitespace-nowrap">Other</th>
+                <th className="border p-2 text-center whitespace-nowrap">Total Samples</th>
+                <th className="border p-2 text-center whitespace-nowrap">Tailors Assigned</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {reportData.map((data) => (
+                <tr key={data.id}>
+                  <td className="border p-2 sticky left-0 bg-white text-center truncate">{data.name}</td>
+                  <td className="border p-2 text-center">{data.sampleCounts.FIT}</td>
+                  <td className="border p-2 text-center">{data.sampleCounts.PP}</td>
+                  <td className="border p-2 text-center">{data.sampleCounts.GPT}</td>
+                  <td className="border p-2 text-center">{data.sampleCounts.SMS}</td>
+                  <td className="border p-2 text-center">{data.sampleCounts.Other}</td>
+                  <td className="border p-2 text-center">
+                    {Object.values(data.sampleCounts).reduce((a, b) => a + b, 0)}
+                  </td>
+                  <td className="border p-2 text-center">{data.tailorsAssigned}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {reportData.map((data) => (
-                  <tr key={data.id}>
-                    <td className="border p-2 sticky left-0 bg-white text-center truncate">{data.name}</td>
-                    <td className="border p-2 text-center">{data.sampleCounts.FIT}</td>
-                    <td className="border p-2 text-center">{data.sampleCounts.PP}</td>
-                    <td className="border p-2 text-center">{data.sampleCounts.GPT}</td>
-                    <td className="border p-2 text-center">{data.sampleCounts.SMS}</td>
-                    <td className="border p-2 text-center">{data.sampleCounts.Other}</td>
-                    <td className="border p-2 text-center">
-                      {Object.values(data.sampleCounts).reduce((a, b) => a + b, 0)}
-                    </td>
-                    <td className="border p-2 text-center">{data.tailorsAssigned}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+            <tfoot className="sticky bottom-0 bg-gray-100 font-bold shadow-md">
+              <tr>
+                <td className="border p-2 sticky left-0 bg-gray-100 text-center whitespace-nowrap">TOTAL</td>
+                <td className="border p-2 text-center">{calculateTotals().FIT}</td>
+                <td className="border p-2 text-center">{calculateTotals().PP}</td>
+                <td className="border p-2 text-center">{calculateTotals().GPT}</td>
+                <td className="border p-2 text-center">{calculateTotals().SMS}</td>
+                <td className="border p-2 text-center">{calculateTotals().Other}</td>
+                <td className="border p-2 text-center">{calculateTotals().totalSamples}</td>
+                <td className="border p-2 text-center">{calculateTotals().tailorsAssigned}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       )}
     </div>

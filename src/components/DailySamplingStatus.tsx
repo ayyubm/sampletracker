@@ -103,6 +103,16 @@ export default function DailySamplingStatus() {
 
         const previousDay = format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd');
         
+        // Calculate total sewn pieces per sample up to the previous day
+        const totalSewnPieces: { [sampleId: string]: number } = {};
+        outputs.forEach(output => {
+          if (output.date < selectedDate) { // Only consider outputs before selected date
+            Object.entries(output.outputs).forEach(([sampleId, sampleOutput]) => {
+              totalSewnPieces[sampleId] = (totalSewnPieces[sampleId] || 0) + (sampleOutput.SEW || 0);
+            });
+          }
+        });
+        
         const buyerStatusData: BuyerStatusData[] = await Promise.all(
           buyers.map(async (buyer) => {
             // Initialize counters
@@ -128,16 +138,22 @@ export default function DailySamplingStatus() {
                 sample.status !== 'Garment Ready' &&
                 sample.status !== 'Dispatched'
               ) {
-                const count = Number(sample.noOfPieces) || 0;
-                const sampleType = getSampleType(sample.typeOfSample);                
-                if (sample.fabricTrimsReceiptDate && sample.fabricTrimsReceiptDate <= previousDay) {
-                    status.openingBalance[sampleType] += count;
-                    status.openingBalance.total += count;
-                } 
-                else if (sample.fabricTrimsReceiptDate === selectedDate) {
-                    status.newIndents[sampleType] += count;
-                    status.newIndents.total += count;
-                }          
+                const totalPieces = Number(sample.noOfPieces) || 0;
+                const sewnPieces = totalSewnPieces[sample.sampleId] || 0;
+                const remainingPieces = Math.max(0, totalPieces - sewnPieces);
+                
+                if (remainingPieces > 0) { // Only count if there are remaining pieces
+                  const sampleType = getSampleType(sample.typeOfSample);
+                  
+                  if (sample.fabricTrimsReceiptDate && sample.fabricTrimsReceiptDate <= previousDay) {
+                    status.openingBalance[sampleType] += remainingPieces;
+                    status.openingBalance.total += remainingPieces;
+                  } 
+                  else if (sample.fabricTrimsReceiptDate === selectedDate) {
+                    status.newIndents[sampleType] += remainingPieces;
+                    status.newIndents.total += remainingPieces;
+                  }
+                }
               }
             });
 

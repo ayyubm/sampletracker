@@ -64,6 +64,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           <FileText size={18} className="inline-block mr-2" />
           Daily Sampling Status
         </button>
+        <button onClick={() => handleNavigation('/sampling-dashboard')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+          <BarChart size={18} className="inline-block mr-2" />
+          Sampling Dashboard
+        </button>
         <button onClick={() => handleNavigation('/merchandising-dashboard')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <BarChart2 size={18} className="inline-block mr-2" />
           Merchandising Dashboard

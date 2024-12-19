@@ -34,6 +34,12 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  changeTracking?: {
+    archived?: {
+      timestamp: string;
+      name: string;
+    };
+  };
 }
 
 interface SamplingOutput {
@@ -98,9 +104,9 @@ const DailyTailorAllotmentReport: React.FC = () => {
         if (
           sample.fabricTrimsReceiptDate &&
           sample.fabricTrimsReceiptDate <= selectedDate &&
-          sample.status !== 'Garment Ready' &&
-          sample.status !== 'Dispatched' &&
-          (sample.isArchived === undefined || sample.isArchived === false)
+          ((sample.isArchived === undefined || sample.isArchived === false) || 
+           (sample.changeTracking?.archived?.timestamp && 
+            sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
         ) {
           if (!sampleCounts[sample.buyerId]) {
             sampleCounts[sample.buyerId] = { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 };

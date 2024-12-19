@@ -20,7 +20,7 @@ export default function AssignTailorsPage() {
     if (!loading) {
       if (!user) {
         router.push('/login');
-      } else if (!userData?.isAdmin && userData?.team !== 'Sampling') {
+      } else if (!userData?.isAdmin && userData?.team !== 'Sampling' && userData?.team !== 'Viewer') {
         router.push('/'); // Redirect to home if not admin or not in Sampling team
       }
     }
@@ -59,7 +59,7 @@ export default function AssignTailorsPage() {
     return <div>Loading...</div>;
   }
 
-  if (!user || (!userData?.isAdmin && userData?.team !== 'Sampling')) {
+  if (!user || (!userData?.isAdmin && userData?.team !== 'Sampling' && userData?.team !== 'Viewer')) {
     return null; // This will prevent the component from rendering while redirecting
   }
 

@@ -6,22 +6,24 @@ import { useEffect } from 'react';
 import DailySamplingOutput from '@/components/DailySamplingOutput';
 
 export default function DailySamplingOutputPage() {
-  const { userData } = useAuth();
+  const { user, loading, userData } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!userData) {
-      router.push('/login');
-      return;
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (!userData?.isAdmin && userData?.team !== 'Sampling' && userData?.team !== 'Viewer') {
+        router.push('/'); // Redirect to home if not admin or not in Sampling team
+      }
     }
+  }, [user, loading, userData, router]);
 
-    if (!userData.isAdmin && userData.team !== 'Sampling') {
-      router.push('/');
-      return;
-    }
-  }, [userData, router]);
-
-  if (!userData || (!userData.isAdmin && userData.team !== 'Sampling')) {
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!userData || (!userData.isAdmin && userData.team !== 'Sampling' && userData.team !== 'Viewer')) {
     return null;
   }
 

@@ -150,21 +150,12 @@ export default function DailySamplingOutput() {
     type: 'success'
   });
 
+  const canSave = userData && (userData.isAdmin || userData.team === 'Sampling');
+
   useEffect(() => {
-    if (!userData) {
-      router.push('/login');
-      return;
-    }
-
-    if (!userData.isAdmin && userData.team !== 'Sampling') {
-      router.push('/');
-      return;
-    }
-
-    const fetchBuyers = async () => {
+      const fetchBuyers = async () => {
       const buyersData = await getDocuments('buyer') as Buyer[];
       setBuyers(buyersData);
-      
       if (selectedBuyer && selectedDate) {
         const selectedBuyerData = buyersData.find(b => b.buyerId === selectedBuyer);
         if (selectedBuyerData?.tailorCounts?.[selectedDate]) {
@@ -173,12 +164,10 @@ export default function DailySamplingOutput() {
           setTailorsAssigned(0);
         }
       }
-      
       setLoading(false);
     };
-
     fetchBuyers();
-  }, [userData, router, selectedBuyer, selectedDate]);
+  }, [selectedBuyer, selectedDate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -443,10 +432,6 @@ export default function DailySamplingOutput() {
     }
   };
 
-  if (!userData || (!userData.isAdmin && userData.team !== 'Sampling')) {
-    return null;
-  }
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -506,12 +491,14 @@ export default function DailySamplingOutput() {
                 onWheel={handleWheel}
                 className="w-24 border rounded-md p-2"
               />
+              {canSave && (
               <Button
                 onClick={saveTailorsAssigned}
                 disabled={isSavingTailors}
               >
-                {isSavingTailors ? 'Saving...' : 'Save'}
-              </Button>
+                  {isSavingTailors ? 'Saving...' : 'Save'}
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -535,12 +522,14 @@ export default function DailySamplingOutput() {
                 <div key={sampleType} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="text-lg font-semibold">{sampleType}</h3>
-                    <Button
-                      onClick={() => saveSampleTypeOutputs(sampleType)}
-                      disabled={isSaving[sampleType]}
-                    >
-                      {isSaving[sampleType] ? 'Saving...' : 'Save'}
-                    </Button>
+                    {canSave && (
+                      <Button
+                        onClick={() => saveSampleTypeOutputs(sampleType)}
+                        disabled={isSaving[sampleType]}
+                      >
+                        {isSaving[sampleType] ? 'Saving...' : 'Save'}
+                      </Button>
+                    )}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -614,6 +603,7 @@ export default function DailySamplingOutput() {
                                   )}
                                   onWheel={handleWheel}
                                   className="w-16 border rounded-md p-1 text-sm"
+                                  disabled={!canSave}
                                 />
                               </td>
                             ))}
@@ -626,7 +616,7 @@ export default function DailySamplingOutput() {
               )
             ))}
             
-            {Object.values(groupedSamples).some(samples => samples.length > 0) && (
+            {Object.values(groupedSamples).some(samples => samples.length > 0) && canSave && (
               <div className="flex justify-end mt-6">
                 <Button
                   onClick={saveAllOutputs}

@@ -3,6 +3,7 @@ import { getDocuments, updateDocument } from '../lib/firebase/firebaseUtils';
 import { format, parseISO } from 'date-fns';
 import Alert from './Alert';
 import { Trash2 } from 'lucide-react';
+import { useAuth } from '../lib/hooks/useAuth';
 
 interface Buyer {
   id: string;
@@ -24,7 +25,7 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   const [newDate, setNewDate] = useState<string>('');
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
+  const { userData } = useAuth();
   useEffect(() => {
     onUnsavedChanges(hasUnsavedChanges);
   }, [hasUnsavedChanges, onUnsavedChanges]);
@@ -106,12 +107,13 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   return (
     <div className="w-full px-4">
       <div className="mb-4 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <input
-            type="date"
-            value={newDate}
-            onChange={(e) => setNewDate(e.target.value)}
-            className="p-2 border rounded"
+        {userData?.team != 'Viewer' && (
+          <div className="flex items-center space-x-4">
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              className="p-2 border rounded"
           />
           <button
             onClick={addNewDate}
@@ -125,7 +127,7 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
           >
             Save Assignments
           </button>
-        </div>
+        </div>)}
       </div>
       {alert && (
         <Alert
@@ -145,13 +147,15 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
                     <th key={date} className="py-3 px-1 text-center text-xs" style={{ minWidth: '8rem' }}>
                       <div className="flex items-center justify-center">
                         <span>{format(parseISO(date), 'dd/MM/yy')}</span>
-                        <button
-                          onClick={() => handleDeleteDate(date)}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                          title="Delete date"
+                        {userData?.team != 'Viewer' && (
+                          <button
+                            onClick={() => handleDeleteDate(date)}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                            title="Delete date"
                         >
                           <Trash2 size={16} />
                         </button>
+                        )}
                       </div>
                     </th>
                   ))}

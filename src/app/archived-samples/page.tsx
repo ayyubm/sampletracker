@@ -29,10 +29,12 @@ const ArchivedSamples: React.FC = () => {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
+    } else if (!userData?.isAdmin && userData?.team !== 'Merchandising' && userData?.team !== 'Viewer') {
+      router.push('/'); 
     } else if (user) {
       fetchArchivedSamples();
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, userData]);
 
   const fetchArchivedSamples = async () => {
     const samples = await getDocuments('samples') as Sample[];
@@ -87,7 +89,7 @@ const ArchivedSamples: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (!user || (!userData?.isAdmin && userData?.team !== 'Merchandising' && userData?.team !== 'Viewer')) {
     return null;
   }
 
@@ -125,13 +127,15 @@ const ArchivedSamples: React.FC = () => {
                   <td className="py-3 px-6 text-left">{sample.actualSampleReceivedDate}</td>
                   <td className="py-3 px-6 text-center">
                     <div className="flex justify-center items-center space-x-2">
-                      <button
+                      {userData?.team != 'Viewer' && (
+                        <button
                         onClick={() => handleUnarchive(sample.id)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Unarchive"
-                      >
-                        <ArrowUpCircle size={18} />
-                      </button>
+                        >
+                          <ArrowUpCircle size={18} />
+                        </button>
+                      )}                      
                       {userData?.isAdmin && (
                         <button
                           onClick={() => handleDelete(sample.id)}

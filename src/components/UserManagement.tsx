@@ -27,7 +27,7 @@ interface EditingUser extends User {
   newPassword?: string;
 }
 
-const TEAMS = ['Merchandising', 'Sampling', 'Fabric', 'Trims', 'Warehouse', 'Management', 'Admin'];
+const TEAMS = ['Merchandising', 'Sampling', 'Fabric', 'Trims', 'Warehouse', 'Management', 'Admin', 'Viewer'];
 
 const UserManagement: React.FC = () => {
   const { userData } = useAuth();

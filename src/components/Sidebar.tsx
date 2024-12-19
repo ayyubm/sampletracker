@@ -28,9 +28,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
     handleNavigation('/login');
   };
 
-  const canAccessAssignTailors = userData?.isAdmin || userData?.team === 'Sampling';
-  const canAccessDailyOutput = userData?.isAdmin || userData?.team === 'Sampling';
-  const canAccessArchived = userData?.isAdmin || userData?.team === 'Merchandising';
+  const canAccessAssignTailors = userData?.isAdmin || userData?.team === 'Sampling' || userData?.team === 'Viewer';
+  const canAccessDailyOutput = userData?.isAdmin || userData?.team === 'Sampling' || userData?.team === 'Viewer';
+  const canAccessArchived = userData?.isAdmin || userData?.team === 'Merchandising' || userData?.team === 'Viewer';
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>

@@ -779,11 +779,26 @@ const SampleList: React.FC<SampleListProps> = ({
   };
 
   const confirmArchive = async () => {
-    if (archiveConfirmation) {
+    if (archiveConfirmation && userData) {
       try {
-        await updateDocument('samples', archiveConfirmation, { isArchived: true });
-        fetchSamples(); // Refresh the samples list
-        onSampleUpdated();
+        const sample = samples.find(s => s.id === archiveConfirmation);
+        if (sample) {
+          const changeInfo: ChangeInfo = {
+            name: userData.firstName,
+            timestamp: new Date().toISOString()
+          };
+
+          await updateDocument('samples', archiveConfirmation, { 
+            isArchived: true,
+            changeTracking: {
+              ...sample.changeTracking,
+              archived: changeInfo
+            }
+          });
+          
+          fetchSamples();
+          onSampleUpdated();
+        }
       } catch (error) {
         console.error('Error archiving sample:', error);
       }

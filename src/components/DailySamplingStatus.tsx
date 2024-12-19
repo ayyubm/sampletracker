@@ -17,6 +17,12 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  changeTracking?: {
+    archived?: {
+      timestamp: string;
+      name: string;
+    };
+  };
 }
 
 interface Buyer {
@@ -133,10 +139,10 @@ export default function DailySamplingStatus() {
             // Calculate opening balance and new indents
             samples.forEach(sample => {
               if (
-                sample.buyerId === buyer.buyerId &&
-                !sample.isArchived &&
-                sample.status !== 'Garment Ready' &&
-                sample.status !== 'Dispatched'
+                sample.buyerId === buyer.buyerId && 
+                ((sample.isArchived === undefined || sample.isArchived === false) || 
+                 (sample.changeTracking?.archived?.timestamp && 
+                  sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
               ) {
                 const totalPieces = Number(sample.noOfPieces) || 0;
                 const sewnPieces = totalSewnPieces[sample.sampleId] || 0;

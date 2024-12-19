@@ -24,11 +24,18 @@ interface Sample {
   sampleId: string;
   buyerId: string;
   style: string;
+  color: string;
   typeOfSample: string;
   fabricTrimsReceiptDate: string;
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  changeTracking?: {
+    archived?: {
+      timestamp: string;
+      name: string;
+    };
+  };
 }
 
 interface PendingSampleCount {
@@ -207,9 +214,9 @@ export default function DailySamplingOutput() {
           sample.buyerId === selectedBuyer &&
           sample.fabricTrimsReceiptDate &&
           sample.fabricTrimsReceiptDate <= selectedDate &&
-          sample.status !== 'Garment Ready' &&
-          sample.status !== 'Dispatched' &&
-          (sample.isArchived === undefined || sample.isArchived === false)
+          ((sample.isArchived === undefined || sample.isArchived === false) || 
+            (sample.changeTracking?.archived?.timestamp && 
+             sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
         ) {
           const sampleType = getSampleType(sample.typeOfSample);
           grouped[sampleType].push(sample);
@@ -432,6 +439,26 @@ export default function DailySamplingOutput() {
     }
   };
 
+  const getStatusBadge = (sample: Sample) => {
+    if (sample.isArchived && sample.changeTracking?.archived?.timestamp) {
+      const archiveDate = format(new Date(sample.changeTracking.archived.timestamp), 'dd/MM/yyyy');
+      if (sample.changeTracking.archived.timestamp.split('T')[0] > selectedDate) {
+        return (
+          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full inline-block">
+            Archived on {archiveDate}
+          </div>
+        );
+      }
+    } else if (sample.status === 'Garment Ready' || sample.status === 'Dispatched') {
+      return (
+        <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block">
+          {sample.status}
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -555,6 +582,9 @@ export default function DailySamplingOutput() {
                           <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
                             Pending Pieces
                           </th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
+                            Status
+                          </th>
                           {Object.keys(defaultDailyOutput).map((stage) => (
                             <th key={stage} className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500">
                               {stage}
@@ -564,22 +594,19 @@ export default function DailySamplingOutput() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {samples.map((sample) => (
-                          <tr key={sample.id}>
+                          <tr key={sample.id} className="hover:bg-gray-50">
                             <td className="px-4 py-2 text-sm">{sample.sampleId}</td>
                             <td className="px-4 py-2 text-sm">
                               <div 
                                 className="truncate max-w-[120px]" 
-                                title={sample.style}
+                                title={`${sample.style}${sample.color ? ` - ${sample.color}` : ''}`}
                               >
                                 {sample.style}
                               </div>
                             </td>
                             {sampleType === 'Other' && (
                               <td className="px-4 py-2 text-sm">
-                                <div 
-                                  className="truncate max-w-[120px]" 
-                                  title={sample.typeOfSample}
-                                >
+                                <div className="truncate max-w-[120px]" title={sample.typeOfSample}>
                                   {sample.typeOfSample}
                                 </div>
                               </td>
@@ -588,7 +615,12 @@ export default function DailySamplingOutput() {
                               {format(new Date(sample.fabricTrimsReceiptDate), 'dd/MM/yyyy')}
                             </td>
                             <td className="px-4 py-2 text-sm">{Number(sample.noOfPieces)}</td>
-                            <td className="px-4 py-2 text-sm">{Math.max(0, Number(sample.noOfPieces || 0) - (totalSewnPieces[sample.sampleId] || 0))}</td>
+                            <td className="px-4 py-2 text-sm">
+                              {Math.max(0, Number(sample.noOfPieces || 0) - (totalSewnPieces[sample.sampleId] || 0))}
+                            </td>
+                            <td className="px-4 py-2 text-sm">
+                              {getStatusBadge(sample)}
+                            </td>
                             {Object.keys(defaultDailyOutput).map((stage) => (
                               <td key={stage} className="px-4 py-2">
                                 <input

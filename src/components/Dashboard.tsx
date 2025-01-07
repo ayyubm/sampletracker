@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
 import SampleList from './SampleList';
 import SampleForm from './SampleForm';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
+import PrintSamplesModal from './PrintSamplesModal';
+import { getDocuments } from '../lib/firebase/firebaseUtils';
 
 export default function Dashboard() {
   const { userData } = useAuth();
@@ -13,6 +15,16 @@ export default function Dashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [clearFiltersFlag, setClearFiltersFlag] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [samples, setSamples] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchSamples = async () => {
+      const fetchedSamples = await getDocuments('samples');
+      setSamples(fetchedSamples);
+    };
+    fetchSamples();
+  }, [refreshTrigger]);
 
   const handleSampleAdded = useCallback(() => {
     setShowForm(false);
@@ -55,12 +67,20 @@ export default function Dashboard() {
         >
           Add New Sample
         </button>
-        <button
-          onClick={clearAllFilters}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          Clear All Filters
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowPrintModal(true)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Print Samples
+          </button>
+          <button
+            onClick={clearAllFilters}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Clear All Filters
+          </button>
+        </div>
       </div>
       {showForm && <SampleForm onClose={() => setShowForm(false)} onSampleAdded={handleSampleAdded} />}
       <div className="flex-grow overflow-hidden px-4 pb-4">
@@ -68,8 +88,16 @@ export default function Dashboard() {
           refreshTrigger={refreshTrigger} 
           onSampleUpdated={handleSampleUpdated} 
           clearFiltersFlag={clearFiltersFlag}
+          samples={samples}
+          setSamples={setSamples}
         />
       </div>
+      {showPrintModal && (
+        <PrintSamplesModal
+          onClose={() => setShowPrintModal(false)}
+          samples={samples}
+        />
+      )}
     </div>
   );
 }

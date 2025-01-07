@@ -64,6 +64,8 @@ interface SampleListProps {
   refreshTrigger: number;
   onSampleUpdated: () => void;
   clearFiltersFlag: boolean;
+  samples: any[];
+  setSamples: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 interface SortConfig {
@@ -109,8 +111,9 @@ const SampleList: React.FC<SampleListProps> = ({
   refreshTrigger,
   onSampleUpdated,
   clearFiltersFlag,
+  samples,
+  setSamples,
 }) => {
-  const [samples, setSamples] = useState<Sample[]>([]);
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(

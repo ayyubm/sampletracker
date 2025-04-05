@@ -405,7 +405,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="requiredFabricQty" className="block text-sm font-medium text-gray-700">Required Fabric Qty</label>
+            <label htmlFor="requiredFabricQty" className="block text-sm font-medium text-gray-700">Total Fabric Qty Required</label>
             <input
               type="number"
               min="0"

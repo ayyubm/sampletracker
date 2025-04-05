@@ -45,19 +45,20 @@ interface Sample {
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
-  procuredFabricQtyIssued: number;
-  stockFabricQtyIssued: number;
-  fabricIssueDate: string;
+  totalFabricQtyRecieved: number;
+
+  
   fabricTrimsReceiptDate: string;
   fabricRejectQty: number; // Add this line
   requiredCompletionDate: string;
   expectedCompletionDate: string;
-  actualSampleReceivedDate: string;
+  SampleDispatchDate: string;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
   remarks: string[];
   isArchived: boolean; // Add this field
+  balanceLeftoverFabric: number;
 }
 
 interface SampleListProps {
@@ -410,19 +411,19 @@ const SampleList: React.FC<SampleListProps> = ({
       "noOfPieces",
       "typeOfFabric",
       "requiredFabricQty",
-      "procuredFabricQtyIssued",
-      "stockFabricQtyIssued",
-      "fabricIssueDate",
+      "totalFabricQtyRecieved",
+
       "fabricTrimsReceiptDate",
       "requiredCompletionDate",
       "expectedCompletionDate",
-      "actualSampleReceivedDate",
+      "SampleDispatchDate",
       "patternNo",
       "color",
       "patternStatus",
       "fabricRejectQty",
       "size",
       "washType",
+      "balanceLeftoverFabric"
     ];
 
     if (editableFields.includes(field)) {
@@ -613,7 +614,7 @@ const SampleList: React.FC<SampleListProps> = ({
             ))}
           </select>
         );
-      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'requiredFabricQty' || field === 'procuredFabricQtyIssued' || field === 'stockFabricQtyIssued') {
+      } else if (field === 'fabricRejectQty' || field === 'noOfPieces' || field === 'requiredFabricQty' || field === 'totalFabricQtyRecieved' || field === 'balanceLeftoverFabric') {
         return (
           <input
             type="number"
@@ -646,11 +647,10 @@ const SampleList: React.FC<SampleListProps> = ({
         return formatTimestamp(value as string);
       } else if (
         field === "buyerRequestDate" ||
-        field === "fabricIssueDate" ||
         field === "fabricTrimsReceiptDate" ||
         field === "requiredCompletionDate" ||
         field === "expectedCompletionDate" ||
-        field === "actualSampleReceivedDate"
+        field === "SampleDispatchDate"
       ) {
         return (
           <div
@@ -934,11 +934,11 @@ const SampleList: React.FC<SampleListProps> = ({
                 </th>
                 <th className="py-3 px-6 text-left">
                   <button
-                    onClick={() => handleSort("actualSampleReceivedDate")}
+                    onClick={() => handleSort("SampleDispatchDate")}
                     className="font-bold hover:text-gray-900 flex items-center"
                   >
-                    Actual Sample Received Date
-                    {sortConfig.key === "actualSampleReceivedDate" &&
+                    Sample Dispatch Date
+                    {sortConfig.key === "SampleDispatchDate" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp size={40} />
                       ) : (
@@ -956,26 +956,13 @@ const SampleList: React.FC<SampleListProps> = ({
                 <th className="py-3 px-6 text-left">Size</th>
                 <th className="py-3 px-6 text-left">Wash Type</th>
                 
-                <th className="py-3 px-6 text-left">Required Fabric Qty</th>
-                <th className="py-3 px-6 text-left">Procured Fabric Qty Issued</th>
-                <th className="py-3 px-6 text-left">Stock Fabric Qty Issued</th>
-                <th className="py-3 px-6 text-left">
-                  <button
-                    onClick={() => handleSort("fabricIssueDate")}
-                    className="font-bold hover:text-gray-900 flex items-center"
-                  >
-                    Fabric Issue Date
-                    {sortConfig.key === "fabricIssueDate" &&
-                      (sortConfig.direction === "asc" ? (
-                        <ArrowUp size={40} className="ml-1" />
-                      ) : (
-                        <ArrowDown size={40} className="ml-1" />
-                      ))}
-                  </button>
-                </th>
+                <th className="py-3 px-6 text-left">Total Fabric Qty Required</th>
+                <th className="py-3 px-6 text-left">Total Fabric Qty Recieved</th>
+                
+                
                 
                 <th className="py-3 px-6 text-left">Fabric Reject Qty</th>
-                
+                <th className="py-3 px-6 text-left">Balance Leftover Fabric</th>
                 <th className="py-3 px-6 text-center sticky right-0 bg-gray-200 z-40">
                   Actions
                 </th>
@@ -1010,7 +997,7 @@ const SampleList: React.FC<SampleListProps> = ({
                       "fabricTrimsReceiptDate",
                       "requiredCompletionDate",
                       "expectedCompletionDate",
-                      "actualSampleReceivedDate",
+                      "SampleDispatchDate",
                       "samplePriorityNo",
                       
                       "season",
@@ -1021,12 +1008,12 @@ const SampleList: React.FC<SampleListProps> = ({
                       "washType",
                       
                       "requiredFabricQty",
-                      "procuredFabricQtyIssued",
-                      "stockFabricQtyIssued",
-                      "fabricIssueDate",
+                      "totalFabricQtyRecieved",
+                      
+                      
                       
                       "fabricRejectQty",
-                      
+                      "balanceLeftoverFabric",
                     ].map((field) => (
                       <td key={field} className="py-3 px-6 text-left">
                         {renderCell(sample, field)}

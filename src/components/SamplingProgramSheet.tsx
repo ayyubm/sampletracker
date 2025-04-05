@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tallRow: {
-    height: '2in',
+    height: '1.85in',
   },
 });
 
@@ -151,6 +151,7 @@ const SamplingProgramSheet: React.FC<SamplingProgramSheetProps> = ({ sample, fir
       <View style={styles.table}>
         <TableRow label="MERCHANT" value={firstName || 'N/A'} />
         <TableRow label="STYLE" value={sample.style} />
+        <TableRow label="COLOR" value={sample.color || ''} />
         <TableRow label="DESCRIPTION" value="" />
         <TableRow label="BUYER" value={sample.buyer} />
         <TableRow label="TYPE" value={sample.typeOfSample} />

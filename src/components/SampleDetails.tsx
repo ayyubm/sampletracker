@@ -41,14 +41,15 @@ interface SampleData {
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
-  procuredFabricQtyIssued: number;
-  stockFabricQtyIssued: number;
-  fabricIssueDate: string;
+  totalFabricQtyRecieved: number;
+
+
   fabricTrimsReceiptDate: string;
   fabricRejectQty: number; // Add this line
   requiredCompletionDate: string;
   expectedCompletionDate: string;
-  actualSampleReceivedDate: string;
+  SampleDispatchDate: string;
+  balanceLeftoverFabric: number;
   changeTracking: {
     [key: string]: ChangeInfo;
   };
@@ -78,14 +79,15 @@ const defaultSampleData: SampleData = {
   noOfPieces: 0,
   typeOfFabric: '',
   requiredFabricQty: 0,
-  procuredFabricQtyIssued: 0,
-  stockFabricQtyIssued: 0,
-  fabricIssueDate: '',
+  totalFabricQtyRecieved: 0,
+
+
   fabricTrimsReceiptDate: '',
   fabricRejectQty: 0, // Add this line
   requiredCompletionDate: '',
   expectedCompletionDate: '',
-  actualSampleReceivedDate: '',
+  SampleDispatchDate: '',
+  balanceLeftoverFabric: 0,
   changeTracking: {},
   remarks: [],
 };
@@ -208,14 +210,16 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'noOfPieces',
     'typeOfFabric',
     'requiredFabricQty',
-    'procuredFabricQtyIssued',
-    'stockFabricQtyIssued',
-    'fabricIssueDate',
-    'fabricTrimsReceiptDate',
+    'totalFabricQtyRecieved',
+
+
+    'fabricTrimsReceiptDate', 
     'fabricRejectQty', // Add this line
+    'balanceLeftoverFabric',      
     'requiredCompletionDate',
     'expectedCompletionDate',
-    'actualSampleReceivedDate',
+    'SampleDispatchDate',
+    
   ];
 
   const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
@@ -236,9 +240,9 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
             return (
               <div key={key} className="mb-4">
                 <label htmlFor={key} className="block text-sm font-medium text-gray-700">
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  {key==='requiredFabricQty'? "Total Fabric Qty Required" : key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </label>
-                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'requiredFabricQty' || key === 'procuredFabricQtyIssued' || key === 'stockFabricQtyIssued' ? (
+                {key === 'fabricRejectQty' || key === 'noOfPieces' || key === 'requiredFabricQty' || key === 'totalFabricQtyRecieved' || key === 'balanceLeftoverFabric'  ? (
                   <input
                     type="number"
                     min="0"

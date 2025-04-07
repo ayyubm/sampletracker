@@ -8,6 +8,7 @@ import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
 import PrintSamplesModal from './PrintSamplesModal';
 import { getDocuments } from '../lib/firebase/firebaseUtils';
+import MasterExcelModal from './MasterExcelModal';
 
 export default function Dashboard() {
   const { userData } = useAuth();
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [clearFiltersFlag, setClearFiltersFlag] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showMasterExcelModal, setShowMasterExcelModal] = useState(false);
   const [samples, setSamples] = useState<any[]>([]);
 
   useEffect(() => {
@@ -45,6 +47,10 @@ export default function Dashboard() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const canViewMasterExcel = userData?.team === 'Viewer' || 
+                            userData?.team === 'Admin' || 
+                            userData?.team === 'Management';
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -68,6 +74,14 @@ export default function Dashboard() {
           Add New Sample
         </button>
         <div className="flex space-x-2">
+          {canViewMasterExcel && (
+            <button
+              onClick={() => setShowMasterExcelModal(true)}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              Print Master Excel
+            </button>
+          )}
           <button
             onClick={() => setShowPrintModal(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -95,6 +109,12 @@ export default function Dashboard() {
       {showPrintModal && (
         <PrintSamplesModal
           onClose={() => setShowPrintModal(false)}
+          samples={samples}
+        />
+      )}
+      {showMasterExcelModal && (
+        <MasterExcelModal
+          onClose={() => setShowMasterExcelModal(false)}
           samples={samples}
         />
       )}

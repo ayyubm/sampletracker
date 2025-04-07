@@ -41,6 +41,7 @@ interface Sample {
   };
   size: string;
   washType: string;
+  fabricSerialNumbers: string[];
 }
 
 interface DuplicateSample {
@@ -60,6 +61,7 @@ interface DuplicateSample {
   requiredCompletionDate: string;
   size: string;
   washType: string;
+  fabricSerialNumbers: string[];
 }
 
 interface SampleFormProps {
@@ -121,10 +123,12 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     washType: '', // Add this line
     requiredFabricQty: 0,
     requiredCompletionDate: '',
+    fabricSerialNumbers: [] as string[],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [serialNumberInput, setSerialNumberInput] = useState('');
 
   useEffect(() => {
     const fetchSampleIdAndBuyers = async () => {
@@ -153,6 +157,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             washType: duplicateSample.washType || '', // Add this line
             requiredFabricQty: duplicateSample.requiredFabricQty, // Include requiredFabricQty
             requiredCompletionDate: duplicateSample.requiredCompletionDate,
+            fabricSerialNumbers: duplicateSample.fabricSerialNumbers,
           });
         } else {
           setFormData(prev => ({ ...prev, sampleId: id }));
@@ -180,6 +185,23 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     } else {
       setFormData(prevData => ({ ...prevData, [name]: value }));
     }
+  };
+
+  const handleSerialNumberAdd = () => {
+    if (serialNumberInput && !formData.fabricSerialNumbers.includes(serialNumberInput)) {
+      setFormData(prev => ({
+        ...prev,
+        fabricSerialNumbers: [...prev.fabricSerialNumbers, serialNumberInput]
+      }));
+      setSerialNumberInput('');
+    }
+  };
+
+  const handleSerialNumberRemove = (numberToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      fabricSerialNumbers: prev.fabricSerialNumbers.filter(num => num !== numberToRemove)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,7 +296,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             </select>
           </div>
           <div className="mb-4">
-            <label htmlFor="buyerRequestDate" className="block text-sm font-medium text-gray-700">Buyer Request Date</label>
+            <label htmlFor="buyerRequestDate" className="block text-sm font-medium text-gray-700">
+              Buyer Request Date <span className="text-red-500">*</span>
+            </label>
             <input
               type="date"
               name="buyerRequestDate"
@@ -286,7 +310,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="buyer" className="block text-sm font-medium text-gray-700">Buyer</label>
+            <label htmlFor="buyer" className="block text-sm font-medium text-gray-700">
+              Buyer <span className="text-red-500">*</span>
+            </label>
             <select
               name="buyer"
               id="buyer"
@@ -302,7 +328,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             </select>
           </div>
           <div className="mb-4">
-            <label htmlFor="style" className="block text-sm font-medium text-gray-700">Style</label>
+            <label htmlFor="style" className="block text-sm font-medium text-gray-700">
+              Style <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               name="style"
@@ -314,7 +342,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="season" className="block text-sm font-medium text-gray-700">Season</label>
+            <label htmlFor="season" className="block text-sm font-medium text-gray-700">
+              Season <span className="text-red-500">*</span>
+            </label>
             <select
               name="season"
               id="season"
@@ -330,7 +360,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             </select>
           </div>
           <div className="mb-4">
-            <label htmlFor="typeOfSample" className="block text-sm font-medium text-gray-700">Type of Sample</label>
+            <label htmlFor="typeOfSample" className="block text-sm font-medium text-gray-700">
+              Type of Sample <span className="text-red-500">*</span>
+            </label>
             <select
               name="typeOfSample"
               id="typeOfSample"
@@ -346,7 +378,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             </select>
           </div>
           <div className="mb-4">
-            <label htmlFor="noOfPieces" className="block text-sm font-medium text-gray-700">No. of Pieces</label>
+            <label htmlFor="noOfPieces" className="block text-sm font-medium text-gray-700">
+              No. of Pieces <span className="text-red-500">*</span>
+            </label>
             <input
               type="number"
               min="0"
@@ -360,7 +394,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="typeOfFabric" className="block text-sm font-medium text-gray-700">Type of Fabric</label>
+            <label htmlFor="typeOfFabric" className="block text-sm font-medium text-gray-700">
+              Type of Fabric <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               name="typeOfFabric"
@@ -381,6 +417,51 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />
+          </div>
+          <div className="mb-4 col-span-2">
+            <label htmlFor="fabricSerialNumber" className="block text-sm font-medium text-gray-700">
+              Fabric Serial Numbers
+            </label>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="number"
+                id="fabricSerialNumber"
+                value={serialNumberInput}
+                onChange={(e) => setSerialNumberInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSerialNumberAdd();
+                  }
+                }}
+                className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                placeholder="Enter serial number"
+              />
+              <button
+                type="button"
+                onClick={handleSerialNumberAdd}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Add
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {formData.fabricSerialNumbers.map((number) => (
+                <div
+                  key={number}
+                  className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+                >
+                  <span>{number}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSerialNumberRemove(number)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="mb-4">
             <label htmlFor="size" className="block text-sm font-medium text-gray-700">Size</label>
@@ -405,7 +486,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="requiredFabricQty" className="block text-sm font-medium text-gray-700">Total Fabric Qty Required</label>
+            <label htmlFor="requiredFabricQty" className="block text-sm font-medium text-gray-700">
+              Total Fabric Qty Required <span className="text-red-500">*</span>
+            </label>
             <input
               type="number"
               min="0"
@@ -419,7 +502,9 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="requiredCompletionDate" className="block text-sm font-medium text-gray-700">Required Completion Date</label>
+            <label htmlFor="requiredCompletionDate" className="block text-sm font-medium text-gray-700">
+              Required Completion Date <span className="text-red-500">*</span>
+            </label>
             <input
               type="date"
               name="requiredCompletionDate"
@@ -429,24 +514,24 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
-          </div>          
+          </div>
+          
+          <div className="col-span-2 mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Add Sample
+            </button>
+          </div>
         </form>
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Add Sample
-          </button>
-        </div>
       </div>
     </div>
   );

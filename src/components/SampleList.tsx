@@ -59,6 +59,7 @@ interface Sample {
   remarks: string[];
   isArchived: boolean; // Add this field
   balanceLeftoverFabric: number;
+  fabricSerialNumbers: string[];
 }
 
 interface SampleListProps {

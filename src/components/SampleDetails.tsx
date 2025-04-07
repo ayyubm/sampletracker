@@ -58,6 +58,7 @@ interface SampleData {
     timestamp: string;
     user: string;
   }[];
+  fabricSerialNumbers: string[];
 }
 
 const defaultSampleData: SampleData = {
@@ -90,6 +91,7 @@ const defaultSampleData: SampleData = {
   balanceLeftoverFabric: 0,
   changeTracking: {},
   remarks: [],
+  fabricSerialNumbers: [],
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -119,6 +121,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
   const [originalSample, setOriginalSample] = useState<SampleData>(defaultSampleData);
   const { userData } = useAuth();
   const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [serialNumberInput, setSerialNumberInput] = useState('');
 
   useEffect(() => {
     const fetchSampleAndBuyers = async () => {
@@ -226,6 +229,23 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     e.currentTarget.blur();
   };
 
+  const handleSerialNumberAdd = () => {
+    if (serialNumberInput && !sample.fabricSerialNumbers.includes(serialNumberInput)) {
+      setSample(prev => ({
+        ...prev,
+        fabricSerialNumbers: [...prev.fabricSerialNumbers, serialNumberInput]
+      }));
+      setSerialNumberInput('');
+    }
+  };
+
+  const handleSerialNumberRemove = (numberToRemove: string) => {
+    setSample(prev => ({
+      ...prev,
+      fabricSerialNumbers: prev.fabricSerialNumbers.filter(num => num !== numberToRemove)
+    }));
+  };
+
   if (loading) return <div className="text-center mt-8">Loading sample details...</div>;
   if (error) return <div className="text-center mt-8 text-red-600">{error}</div>;
   if (!sample) return <div className="text-center mt-8">No sample found.</div>;
@@ -300,8 +320,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                     id={key}
                     value={value as string}
                     onChange={handleChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <option key={option} value={option}>
@@ -332,7 +351,6 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                     value={value as string}
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
                   >
                     <option value="">Select pattern status</option>
                     {PATTERN_STATUS_OPTIONS.map((option) => (
@@ -358,6 +376,54 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
               </div>
             );
           })}
+          <div className="col-span-2 mb-4">
+            <label htmlFor="fabricSerialNumber" className="block text-sm font-medium text-gray-700">
+              Fabric Serial Numbers
+            </label>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="number"
+                id="fabricSerialNumber"
+                value={serialNumberInput}
+                onChange={(e) => setSerialNumberInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSerialNumberAdd();
+                  }
+                }}
+                className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                placeholder="Enter serial number"
+              />
+              <button
+                type="button"
+                onClick={handleSerialNumberAdd}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Add
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {sample.fabricSerialNumbers.map((number) => (
+                <div
+                  key={number}
+                  className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+                >
+                  <span>{number}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSerialNumberRemove(number)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {formatChangeInfo(sample.changeTracking['fabricSerialNumbers'])}
+            </div>
+          </div>
           <div className="col-span-2 mt-4 flex justify-end">
             <button
               type="button"

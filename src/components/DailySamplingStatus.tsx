@@ -109,12 +109,18 @@ export default function DailySamplingStatus() {
 
         const previousDay = format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd');
         
+        // Create a set of existing sample IDs for quick lookup
+        const existingSampleIds = new Set(samples.map(sample => sample.sampleId));
+        
         // Calculate total sewn pieces per sample up to the previous day
         const totalSewnPieces: { [sampleId: string]: number } = {};
         outputs.forEach(output => {
           if (output.date < selectedDate) { // Only consider outputs before selected date
             Object.entries(output.outputs).forEach(([sampleId, sampleOutput]) => {
-              totalSewnPieces[sampleId] = (totalSewnPieces[sampleId] || 0) + (sampleOutput.SEW || 0);
+              // Only count outputs for samples that still exist
+              if (existingSampleIds.has(sampleId)) {
+                totalSewnPieces[sampleId] = (totalSewnPieces[sampleId] || 0) + (sampleOutput.SEW || 0);
+              }
             });
           }
         });
@@ -169,8 +175,14 @@ export default function DailySamplingStatus() {
             );
 
             if (todaysOutput) {
-              status.todaysOutput = Object.values(todaysOutput.outputs)
-                .reduce((sum, output) => sum + (output.SEW || 0), 0);
+              status.todaysOutput = Object.entries(todaysOutput.outputs)
+                .reduce((sum, [sampleId, output]) => {
+                  // Only count outputs for samples that still exist
+                  if (existingSampleIds.has(sampleId)) {
+                    return sum + (output.SEW || 0);
+                  }
+                  return sum;
+                }, 0);
             }
 
             // Calculate total balance

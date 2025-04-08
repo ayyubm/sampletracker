@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard, TrendingUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -56,6 +56,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             Daily Output
           </button>
         )}
+        <button 
+            onClick={() => handleNavigation('/monthly-sampling-report')} 
+            className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100"
+          >
+            <TrendingUp size={18} className="inline-block mr-2" />
+            Drill Down Yearly Report
+        </button>
         <button onClick={() => handleNavigation('/daily-tailor-report')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
           <FileText size={18} className="inline-block mr-2" />
           Pending Samples Report
@@ -83,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             <Settings size={18} className="inline-block mr-2" />
             User Management
           </button>
-        )}
+        )}               
         {canAccessArchived && (
           <button onClick={() => handleNavigation('/archived-samples')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
             <Archive size={18} className="inline-block mr-2" />

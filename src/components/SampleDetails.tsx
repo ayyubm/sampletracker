@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getDocument, updateDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
+import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
 import { PDFDownloadLink, BlobProvider } from '@react-pdf/renderer';
 import SamplingProgramSheet from './SamplingProgramSheet';
 import { Sample } from '../types/sample';
@@ -34,10 +34,11 @@ interface SampleData {
   buyerId: string;
   style: string;
   season: string;
+  productCategory: string;
   typeOfSample: string;
   color: string;
-  size: string; // Add this line
-  washType: string; // Add this line
+  size: string;
+  washType: string;
   noOfPieces: number;
   typeOfFabric: string;
   requiredFabricQty: number;
@@ -45,7 +46,7 @@ interface SampleData {
 
 
   fabricTrimsReceiptDate: string;
-  fabricRejectQty: number; // Add this line
+  fabricRejectQty: number;
   requiredCompletionDate: string;
   expectedCompletionDate: string;
   SampleDispatchDate: string;
@@ -73,10 +74,11 @@ const defaultSampleData: SampleData = {
   buyerId: '',
   style: '',
   season: '',
+  productCategory: '',
   typeOfSample: '',
   color: '',
-  size: '', // Add this line
-  washType: '', // Add this line
+  size: '',
+  washType: '',
   noOfPieces: 0,
   typeOfFabric: '',
   requiredFabricQty: 0,
@@ -84,7 +86,7 @@ const defaultSampleData: SampleData = {
 
 
   fabricTrimsReceiptDate: '',
-  fabricRejectQty: 0, // Add this line
+  fabricRejectQty: 0,
   requiredCompletionDate: '',
   expectedCompletionDate: '',
   SampleDispatchDate: '',
@@ -206,19 +208,20 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'buyer',
     'style',
     'season',
+    'productCategory',
     'typeOfSample',
     'color',
-    'size', // Add this line
-    'washType', // Add this line
+    'size',
+    'washType',
     'noOfPieces',
     'typeOfFabric',
     'requiredFabricQty',
     'totalFabricQtyRecieved',
 
 
-    'fabricTrimsReceiptDate', 
-    'fabricRejectQty', // Add this line
-    'balanceLeftoverFabric',      
+    'fabricTrimsReceiptDate',
+    'fabricRejectQty',
+    'balanceLeftoverFabric',
     'requiredCompletionDate',
     'expectedCompletionDate',
     'SampleDispatchDate',
@@ -354,6 +357,22 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                   >
                     <option value="">Select pattern status</option>
                     {PATTERN_STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : key === 'productCategory' ? (
+                  <select
+                    name={key}
+                    id={key}
+                    value={value as string}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {PRODUCT_CATEGORY_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>

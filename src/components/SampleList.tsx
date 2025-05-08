@@ -14,6 +14,7 @@ import {
   STATUS_OPTIONS,
   SEASON_OPTIONS,
   PATTERN_STATUS_OPTIONS,
+  PRODUCT_CATEGORY_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
 import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive, BarChart } from "lucide-react";
@@ -38,6 +39,7 @@ interface Sample {
   buyerId: string;
   style: string;
   season: string;
+  productCategory: string; // Add this line
   typeOfSample: string;
   color: string; // New field
   size: string; // Add this line
@@ -127,6 +129,7 @@ const SampleList: React.FC<SampleListProps> = ({
     status: "",
     style: "",
     patternStatus: "", // Add this line
+    productCategory: "", // Add this line
   });
   const [styleSearch, setStyleSearch] = useState("");
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
@@ -203,7 +206,8 @@ const SampleList: React.FC<SampleListProps> = ({
             sample.typeOfSample === filters.typeOfSample) &&
           (filters.status === "" || sample.status === filters.status) &&
           (filters.style === "" || sample.style === filters.style) &&
-          (filters.patternStatus === "" || sample.patternStatus === filters.patternStatus) // Add this line
+          (filters.patternStatus === "" || sample.patternStatus === filters.patternStatus) && // Add this line
+          (filters.productCategory === "" || sample.productCategory === filters.productCategory) // Add this line
         );
       })
       .sort((a, b) => {
@@ -252,6 +256,7 @@ const SampleList: React.FC<SampleListProps> = ({
         status: "",
         style: "",
         patternStatus: "",
+        productCategory: "", // Add this line
       });
       setStyleSearch("");
     }
@@ -397,6 +402,7 @@ const SampleList: React.FC<SampleListProps> = ({
       status: "",
       style: "",
       patternStatus: "", // Add this line
+      productCategory: "", // Add this line
     });
   };
 
@@ -408,6 +414,7 @@ const SampleList: React.FC<SampleListProps> = ({
       "buyer",
       "style",
       "season",
+      "productCategory",
       "typeOfSample",
       "noOfPieces",
       "typeOfFabric",
@@ -581,6 +588,24 @@ const SampleList: React.FC<SampleListProps> = ({
           >
             <option value="">Select a season</option>
             {SEASON_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      } else if (field === "productCategory") {
+        return (
+          <select
+            value={editValue}
+            onChange={handleCellChange}
+            onBlur={handleCellBlur}
+            onKeyDown={handleCellKeyDown}
+            className="w-full p-1 border rounded"
+            autoFocus
+          >
+            <option value="">Select a product category</option>
+            {PRODUCT_CATEGORY_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -951,7 +976,15 @@ const SampleList: React.FC<SampleListProps> = ({
                 
                 
                 <th className="py-3 px-6 text-left">Season</th>
-                
+                <th className="py-3 px-6 text-left">
+                  <button
+                    onClick={(e) => handleFilterClick("productCategory", e)}
+                    className="font-bold hover:text-gray-900 flex items-center"
+                  >
+                    Product Category {filters.productCategory && `(${filters.productCategory})`}
+                    <ChevronDownIcon />
+                  </button>
+                </th>
                 <th className="py-3 px-6 text-left">Type of Fabric</th>
                 <th className="py-3 px-6 text-left">Color</th>
                 <th className="py-3 px-6 text-left">Size</th>
@@ -1002,7 +1035,7 @@ const SampleList: React.FC<SampleListProps> = ({
                       "samplePriorityNo",
                       
                       "season",
-                      
+                      "productCategory",
                       "typeOfFabric",
                       "color",
                       "size",
@@ -1126,6 +1159,8 @@ const SampleList: React.FC<SampleListProps> = ({
                 ? STATUS_OPTIONS
                 : activeFilter === "patternStatus"
                 ? PATTERN_STATUS_OPTIONS
+                : activeFilter === "productCategory"
+                ? PRODUCT_CATEGORY_OPTIONS
                 : []
             }
             filterName={activeFilter}

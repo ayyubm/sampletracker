@@ -65,3 +65,5 @@ export const SEASON_OPTIONS = [
 ];
 
 export const PATTERN_STATUS_OPTIONS = ['New', 'Under Correction', 'Awaiting Confirmation', 'Awaiting Block', 'Awaiting Shrinkage Report', 'Pattern Ready'];
+
+export const PRODUCT_CATEGORY_OPTIONS = ['Men', 'Women', 'Kids'];

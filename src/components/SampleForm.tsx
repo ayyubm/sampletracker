@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { addDocument, getDocuments } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
-import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS } from '../lib/constants';
+import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
 
 interface Buyer {
   id?: string;
@@ -24,6 +24,7 @@ interface Sample {
   buyerId: string; // New field to store the buyer's ID
   style: string;
   season: string;
+  productCategory: string;
   typeOfSample: string;
   color: string;
   noOfPieces: number;
@@ -53,6 +54,7 @@ interface DuplicateSample {
   buyerId: string;
   style: string;
   season: string;
+  productCategory: string;
   typeOfSample: string;
   color: string;
   noOfPieces: number;
@@ -109,18 +111,19 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     status: 'New',
     samplePriorityNo: '',
     patternNo: '',
-    patternStatus: '', // Add this line
+    patternStatus: '',
     buyerRequestDate: '',
     buyer: '',
-    buyerId: '', // New field to store the buyer's ID
+    buyerId: '',
     style: '',
     season: '',
+    productCategory: '',
     typeOfSample: '',
     noOfPieces: 0,
     typeOfFabric: '',
     color: '',
-    size: '', // Add this line
-    washType: '', // Add this line
+    size: '',
+    washType: '',
     requiredFabricQty: 0,
     requiredCompletionDate: '',
     fabricSerialNumbers: [] as string[],
@@ -146,16 +149,17 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             patternStatus: duplicateSample.patternStatus,
             buyerRequestDate: duplicateSample.buyerRequestDate,
             buyer: duplicateSample.buyer,
-            buyerId: duplicateSample.buyerId, // Set the buyerId for duplicated sample
+            buyerId: duplicateSample.buyerId,
             style: duplicateSample.style,
             season: duplicateSample.season,
+            productCategory: duplicateSample.productCategory || '',
             typeOfSample: duplicateSample.typeOfSample,
             noOfPieces: duplicateSample.noOfPieces,
             typeOfFabric: duplicateSample.typeOfFabric,
-            color: duplicateSample.color, // Include color
-            size: duplicateSample.size || '', // Add this line
-            washType: duplicateSample.washType || '', // Add this line
-            requiredFabricQty: duplicateSample.requiredFabricQty, // Include requiredFabricQty
+            color: duplicateSample.color,
+            size: duplicateSample.size || '',
+            washType: duplicateSample.washType || '',
+            requiredFabricQty: duplicateSample.requiredFabricQty,
             requiredCompletionDate: duplicateSample.requiredCompletionDate,
             fabricSerialNumbers: duplicateSample.fabricSerialNumbers,
           });
@@ -355,6 +359,24 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             >
               <option value="">Select a season</option>
               {SEASON_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="productCategory" className="block text-sm font-medium text-gray-700">
+              Product Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="productCategory"
+              id="productCategory"
+              value={formData.productCategory}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              required
+            >
+              <option value="">Select a category</option>
+              {PRODUCT_CATEGORY_OPTIONS.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>

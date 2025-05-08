@@ -1,8 +1,9 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "python-3.11", "web"]
 run = "NODE_ENV=development npm run dev"
 
 [nix]
 channel = "stable-24_05"
+packages = ["google-cloud-sdk-gce"]
 
 [deployment]
 run = ["sh", "-c", "NODE_ENV=production npm run start"]

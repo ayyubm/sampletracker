@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getDocument, updateDocument, getDocuments } from '../lib/firebase/firebaseUtils';
+import { getDocument, updateDocument, getDocuments, uploadFile } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
 import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
@@ -60,6 +60,7 @@ interface SampleData {
     user: string;
   }[];
   fabricSerialNumbers: string[];
+  imageUrl?: string;
 }
 
 const defaultSampleData: SampleData = {
@@ -94,6 +95,7 @@ const defaultSampleData: SampleData = {
   changeTracking: {},
   remarks: [],
   fabricSerialNumbers: [],
+  imageUrl: '',
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -124,6 +126,11 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
   const { userData } = useAuth();
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [serialNumberInput, setSerialNumberInput] = useState('');
+  
+  // Add state variables for image upload
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     const fetchSampleAndBuyers = async () => {
@@ -169,26 +176,64 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (sample && userData) {
-      const changeInfo: ChangeInfo = {
-        name: userData.firstName,
-        timestamp: new Date().toISOString()
-      };
-      const updatedChangeTracking = { ...sample.changeTracking };
-      Object.keys(sample).forEach(key => {
-        if (sample[key as keyof SampleData] !== originalSample[key as keyof SampleData]) {
-          updatedChangeTracking[key] = changeInfo;
+      try {
+        // Upload image if a new one is selected
+        let imageUrl = sample.imageUrl || '';
+        if (imageFile) {
+          setImageUploading(true);
+          const path = `samples/${sample.sampleId}/${imageFile.name}`;
+          imageUrl = await uploadFile(imageFile, path);
         }
-      });
-      const updatedSample = {
-        ...sample,
-        changeTracking: updatedChangeTracking,
-      };
-      await updateDocument('samples', sampleId, updatedSample);
-      onSampleUpdated();
-      onClose();
+        
+        const changeInfo: ChangeInfo = {
+          name: userData.firstName,
+          timestamp: new Date().toISOString()
+        };
+        
+        const updatedChangeTracking = { ...sample.changeTracking };
+        Object.keys(sample).forEach(key => {
+          if (sample[key as keyof SampleData] !== originalSample[key as keyof SampleData]) {
+            updatedChangeTracking[key] = changeInfo;
+          }
+        });
+        
+        // Add imageUrl to change tracking if it was updated
+        if (imageUrl !== originalSample.imageUrl) {
+          updatedChangeTracking['imageUrl'] = changeInfo;
+        }
+        
+        const updatedSample = {
+          ...sample,
+          imageUrl,
+          changeTracking: updatedChangeTracking,
+        };
+        
+        await updateDocument('samples', sampleId, updatedSample);
+        onSampleUpdated();
+        onClose();
+      } catch (err) {
+        console.error('Error updating sample:', err);
+        setError('Failed to update sample. Please try again.');
+      } finally {
+        setImageUploading(false);
+      }
     }
   };
 
@@ -443,6 +488,61 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
               {formatChangeInfo(sample.changeTracking['fabricSerialNumbers'])}
             </div>
           </div>
+          
+          {/* Image upload/display section */}
+          <div className="col-span-2 mb-4">
+            <label className="block text-sm font-medium text-gray-700">Sample Image</label>
+            <div className="mt-2 flex items-start gap-4">
+              {/* Display current image if it exists */}
+              {(sample.imageUrl || imagePreview) && (
+                <div className="relative w-60 h-60">
+                  <img
+                    src={imagePreview || sample.imageUrl}
+                    alt="Sample"
+                    className="object-cover w-full h-full rounded-md border border-gray-300"
+                  />
+                  {imagePreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <input
+                  type="file"
+                  id="sampleImage"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">Upload a new image to replace the current one.</p>
+                {sample.imageUrl && !imagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSample(prev => ({ ...prev, imageUrl: '' }));
+                    }}
+                    className="mt-2 text-sm text-red-600 hover:text-red-800"
+                  >
+                    Remove current image
+                  </button>
+                )}
+                <div className="text-xs text-gray-500 mt-1">
+                  {formatChangeInfo(sample.changeTracking['imageUrl'])}
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div className="col-span-2 mt-4 flex justify-end">
             <button
               type="button"
@@ -453,9 +553,10 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={imageUploading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              Update Sample
+              {imageUploading ? 'Uploading...' : 'Update Sample'}
             </button>
           </div>
         </form>

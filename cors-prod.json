@@ -1,0 +1,9 @@
+[
+  {
+    "origin": [
+      "https://sampletracker.replit.app" 
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

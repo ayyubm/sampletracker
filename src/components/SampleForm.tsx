@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addDocument, getDocuments } from '../lib/firebase/firebaseUtils';
+import { addDocument, getDocuments, uploadFile } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
 
@@ -43,6 +43,7 @@ interface Sample {
   size: string;
   washType: string;
   fabricSerialNumbers: string[];
+  imageUrl?: string;
 }
 
 interface DuplicateSample {
@@ -64,6 +65,7 @@ interface DuplicateSample {
   size: string;
   washType: string;
   fabricSerialNumbers: string[];
+  imageUrl?: string;
 }
 
 interface SampleFormProps {
@@ -127,11 +129,17 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     requiredFabricQty: 0,
     requiredCompletionDate: '',
     fabricSerialNumbers: [] as string[],
+    imageUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [serialNumberInput, setSerialNumberInput] = useState('');
+  
+  // Add state variables for image upload
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     const fetchSampleIdAndBuyers = async () => {
@@ -162,6 +170,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             requiredFabricQty: duplicateSample.requiredFabricQty,
             requiredCompletionDate: duplicateSample.requiredCompletionDate,
             fabricSerialNumbers: duplicateSample.fabricSerialNumbers,
+            imageUrl: duplicateSample.imageUrl || '',
           });
         } else {
           setFormData(prev => ({ ...prev, sampleId: id }));
@@ -208,29 +217,67 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (userData) {
-      const changeInfo: ChangeInfo = {
-        name: userData.firstName,
-        timestamp: new Date().toISOString()
-      };
-      const changeTracking: { [key: string]: ChangeInfo } = {};
-      Object.keys(formData).forEach(key => {
-        if (formData[key as keyof typeof formData]) {
-          changeTracking[key] = changeInfo;
+      try {
+        setImageUploading(true);
+        
+        // Upload image if selected
+        let imageUrl = '';
+        if (imageFile) {
+          const path = `samples/${formData.sampleId}/${imageFile.name}`;
+          imageUrl = await uploadFile(imageFile, path);
         }
-      });
-      const newSample = {
-        ...formData,
-        status: 'New',
-        changeTracking,
-        timestamp: new Date().toISOString(),
-      };
-      await addDocument('samples', newSample);
-      onSampleAdded();
-      onClose();
+        
+        const changeInfo: ChangeInfo = {
+          name: userData.firstName,
+          timestamp: new Date().toISOString()
+        };
+        const changeTracking: { [key: string]: ChangeInfo } = {};
+        Object.keys(formData).forEach(key => {
+          if (formData[key as keyof typeof formData]) {
+            changeTracking[key] = changeInfo;
+          }
+        });
+        
+        // Add imageUrl to change tracking if it exists
+        if (imageUrl) {
+          changeTracking['imageUrl'] = changeInfo;
+        }
+        
+        const newSample = {
+          ...formData,
+          imageUrl,
+          status: 'New',
+          changeTracking,
+          timestamp: new Date().toISOString(),
+        };
+        
+        await addDocument('samples', newSample);
+        onSampleAdded();
+        onClose();
+      } catch (err) {
+        console.error('Error adding sample:', err);
+        setError('Failed to add sample. Please try again.');
+      } finally {
+        setImageUploading(false);
+      }
     }
   };
 
@@ -538,6 +585,43 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             />
           </div>
           
+          {/* Image upload section */}
+          <div className="mb-4 col-span-2">
+            <label htmlFor="sampleImage" className="block text-sm font-medium text-gray-700">
+              Sample Image
+            </label>
+            <div className="mt-1 flex items-center">
+              <input
+                type="file"
+                id="sampleImage"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
+            {imagePreview && (
+              <div className="mt-2">
+                <div className="relative w-40 h-40">
+                  <img
+                    src={imagePreview}
+                    alt="Sample preview"
+                    className="object-cover w-full h-full rounded-md"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview(null);
+                    }}
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div className="col-span-2 mt-4 flex justify-end">
             <button
               type="button"
@@ -548,9 +632,10 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={imageUploading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              Add Sample
+              {imageUploading ? 'Uploading...' : 'Add Sample'}
             </button>
           </div>
         </form>

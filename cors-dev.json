@@ -1,0 +1,10 @@
+[
+  {
+    "origin": [
+      "https://*.replit.dev", 
+      "https://*.repl.co"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

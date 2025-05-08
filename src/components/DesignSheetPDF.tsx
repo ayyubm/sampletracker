@@ -6,10 +6,11 @@ const styles = StyleSheet.create({
   page: {
     padding: 10,
     backgroundColor: '#FFFFFF',
+    orientation: 'landscape',
   },
   title: {
-    fontSize: 14,
-    marginBottom: 10,
+    fontSize: 12,
+    marginBottom: 8,
     textAlign: 'center',
     fontWeight: 'bold',
   },
@@ -17,52 +18,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    height: '95%', // Control the overall height
   },
   box: {
     width: '49%',
-    height: 380,
+    height: '48%', // Use percentage height instead of fixed pixels
     border: '1pt solid #000000',
-    marginBottom: 10,
-    padding: 5,
+    marginBottom: 8,
     position: 'relative',
   },
-  imageContainer: {
-    width: '45%',
-    height: 200,
-    marginBottom: 10,
+  boxContent: {
+    flexDirection: 'row',
+    padding: 8,
+    height: '100%',
+  },
+  leftSection: {
+    width: '50%',
+    height: '75%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rightSection: {
+    width: '50%',
+    paddingLeft: 5,
   },
   sampleImage: {
-    width: '100%',
-    height: '100%',
+    maxWidth: '95%',
+    maxHeight: '95%',
     objectFit: 'contain',
   },
   noImage: {
     color: '#999999',
-    fontSize: 10,
+    fontSize: 9,
     textAlign: 'center',
-    marginTop: 50,
-  },
-  detailsContainer: {
-    marginTop: 5,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  detailLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    width: 65,
-  },
-  detailValue: {
-    fontSize: 10,
-    flex: 1,
   },
   infoBlock: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    width: '50%',
+    marginTop: 5,
   },
   styleRow: {
     flexDirection: 'row',
@@ -71,7 +63,7 @@ const styles = StyleSheet.create({
   styleLabel: {
     fontSize: 8,
     fontWeight: 'bold',
-    width: 55,
+    width: 60,
   },
   styleValue: {
     fontSize: 8,
@@ -79,32 +71,69 @@ const styles = StyleSheet.create({
   },
   sampleStatus: {
     position: 'absolute',
-    bottom: 10,
-    right: 10,
+    bottom: 5,
+    right: 8,
     flexDirection: 'row',
   },
   sampleStatusLabel: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
-    marginRight: 5,
+    marginRight: 3,
   },
   sampleStatusValue: {
-    fontSize: 8,
+    fontSize: 7,
   },
   sampleETD: {
     position: 'absolute',
-    bottom: 25,
-    left: 10,
+    bottom: 5,
+    left: 8,
     flexDirection: 'row',
   },
   sampleETDLabel: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
-    marginRight: 5,
+    marginRight: 3,
   },
   sampleETDValue: {
-    fontSize: 8,
+    fontSize: 7,
   },
+  fabricSwatch: {
+    marginTop: 8,
+    width: '80%',
+    height: 40,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    alignSelf: 'center',
+  },
+  notesContainer: {
+    position: 'absolute',
+    top: '45%',
+    left: '10%',
+    backgroundColor: '#ffff99',
+    padding: 3,
+    width: '25%',
+    zIndex: 2,
+  },
+  notesText: {
+    fontSize: 6,
+    fontWeight: 'bold',
+  },
+  handwrittenNote: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    color: '#666666',
+    fontSize: 6,
+    transform: 'rotate(-5deg)',
+    fontStyle: 'italic',
+  },
+  buyerHeader: {
+    fontSize: 10,
+    marginTop: 3,
+    marginLeft: 3,
+    color: '#555555',
+  }
 });
 
 // Sample interface 
@@ -129,29 +158,41 @@ interface DesignSheetPDFProps {
 
 const SampleBox = ({ sample }: { sample: Sample }) => (
   <View style={styles.box}>
-    <View style={styles.imageContainer}>
-      {sample.imageDataURI ? (
-        <Image src={sample.imageDataURI} style={styles.sampleImage} />
-      ) : (
-        <Text style={styles.noImage}>No image</Text>
-      )}
+    {/* Buyer name in the top left */}
+    <Text style={styles.buyerHeader}>{sample.buyer}</Text>
+    
+    <View style={styles.boxContent}>
+      {/* Left section with image */}
+      <View style={styles.leftSection}>
+        {sample.imageDataURI ? (
+          <Image src={sample.imageDataURI} style={styles.sampleImage} />
+        ) : (
+          <Text style={styles.noImage}>No image</Text>
+        )}
+
+      </View>
+      
+      {/* Right section with details */}
+      <View style={styles.rightSection}>
+        <View style={styles.infoBlock}>
+          <View style={styles.styleRow}>
+            <Text style={styles.styleLabel}>STYLE:</Text>
+            <Text style={styles.styleValue}>{sample.style}</Text>
+          </View>
+          <View style={styles.styleRow}>
+            <Text style={styles.styleLabel}>PATTERN:</Text>
+            <Text style={styles.styleValue}>{sample.patternNo || ''}</Text>
+          </View>
+          <View style={styles.styleRow}>
+            <Text style={styles.styleLabel}>FABRIC:</Text>
+            <Text style={styles.styleValue}>{sample.typeOfFabric || sample.color || ''}</Text>
+          </View>
+          
+        </View>
+      </View>
     </View>
     
-    <View style={styles.infoBlock}>
-      <View style={styles.styleRow}>
-        <Text style={styles.styleLabel}>STYLE:</Text>
-        <Text style={styles.styleValue}>{sample.style}</Text>
-      </View>
-      <View style={styles.styleRow}>
-        <Text style={styles.styleLabel}>PATTERN:</Text>
-        <Text style={styles.styleValue}>{sample.patternNo || ''}</Text>
-      </View>
-      <View style={styles.styleRow}>
-        <Text style={styles.styleLabel}>FABRIC:</Text>
-        <Text style={styles.styleValue}>{sample.typeOfFabric || ''}</Text>
-      </View>
-    </View>
-    
+    {/* Bottom left - Sample ETD */}
     <View style={styles.sampleETD}>
       <Text style={styles.sampleETDLabel}>SAMPLE ETD:</Text>
       <Text style={styles.sampleETDValue}>
@@ -159,6 +200,7 @@ const SampleBox = ({ sample }: { sample: Sample }) => (
       </Text>
     </View>
     
+    {/* Bottom right - Sample Status */}
     <View style={styles.sampleStatus}>
       <Text style={styles.sampleStatusLabel}>SAMPLE STATUS:</Text>
       <Text style={styles.sampleStatusValue}>{sample.status}</Text>
@@ -169,6 +211,19 @@ const SampleBox = ({ sample }: { sample: Sample }) => (
 const DesignSheetPDF = ({ samples, title }: DesignSheetPDFProps) => {
   // Calculate how many samples per page (4 per page)
   const SAMPLES_PER_PAGE = 4;
+  
+  // Get current buyer from the title if it contains "Buyer:"
+  const buyerName = title.includes('Buyer:') 
+    ? title.split('Buyer:')[1].trim().split(' |')[0].trim()
+    : '';
+  
+  // Create a modified title that matches the screenshot
+  const getPageTitle = (pageIndex: number, pageCount: number) => {
+    if (buyerName) {
+      return `Buyer: ${buyerName} (Page ${pageIndex + 1} of ${pageCount})`;
+    }
+    return `${title} (Page ${pageIndex + 1} of ${pageCount})`;
+  };
   
   // Calculate how many pages we need
   const pageCount = Math.ceil(samples.length / SAMPLES_PER_PAGE);
@@ -182,8 +237,8 @@ const DesignSheetPDF = ({ samples, title }: DesignSheetPDFProps) => {
   return (
     <Document>
       {pages.map((pageSamples, pageIndex) => (
-        <Page key={`page_${pageIndex}`} size="A4" style={styles.page}>
-          <Text style={styles.title}>{title} (Page {pageIndex + 1} of {pageCount})</Text>
+        <Page key={`page_${pageIndex}`} size="A4" orientation="landscape" style={styles.page}>
+          <Text style={styles.title}>{getPageTitle(pageIndex, pageCount)}</Text>
           
           <View style={styles.gridContainer}>
             {pageSamples.map((sample) => (
@@ -191,7 +246,7 @@ const DesignSheetPDF = ({ samples, title }: DesignSheetPDFProps) => {
             ))}
             
             {/* Add empty boxes if we don't have 4 samples to fill the page */}
-            {Array.from({ length: SAMPLES_PER_PAGE - pageSamples.length }).map((_, i) => (
+            {Array.from({ length: Math.max(0, SAMPLES_PER_PAGE - pageSamples.length) }).map((_, i) => (
               <View key={`empty_${i}`} style={styles.box} />
             ))}
           </View>

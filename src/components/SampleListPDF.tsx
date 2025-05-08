@@ -12,6 +12,7 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 8,
     backgroundColor: '#FFFFFF',
+    orientation: 'landscape',
   },
   title: {
     fontSize: 14,
@@ -58,14 +59,14 @@ const styles = StyleSheet.create({
     textAlign: 'center', // Add text alignment
     padding: 4, // Re-apply padding if overridden by tableCell
   },
-  id: { width: '12%' },
-  image: { width: '10%' }, // Style for the View containing the image/text
-  style: { width: '16%' },
-  buyer: { width: '16%' },
+  id: { width: '10%' },
+  image: { width: '12%' }, // Style for the View containing the image/text
+  style: { width: '14%' },
+  buyer: { width: '15%' },
   color: { width: '12%' }, // Rename from patternNo to color
-  type: { width: '14%' },
+  type: { width: '13%' },
   pieces: { width: '8%' },
-  date: { width: '12%' },
+  date: { width: '10%' },
   sampleImage: {
     width: 80,
     height: 80,
@@ -114,7 +115,7 @@ const ImageOrFallback = ({ dataURI }: { dataURI?: string }) => {
 
 const SampleListPDF = ({ samples, status }: SampleListPDFProps) => {
   // Calculate how many samples per page (adjust based on your needs)
-  const SAMPLES_PER_PAGE = 8; // This should fit nicely on an A4 page with our row heights
+  const SAMPLES_PER_PAGE = 10; // Increased for landscape orientation
   
   // Calculate how many pages we need
   const pageCount = Math.ceil(samples.length / SAMPLES_PER_PAGE);
@@ -128,7 +129,7 @@ const SampleListPDF = ({ samples, status }: SampleListPDFProps) => {
   return (
     <Document>
       {pages.map((pageSamples, pageIndex) => (
-        <Page key={`page_${pageIndex}`} size="A4" style={styles.page}>
+        <Page key={`page_${pageIndex}`} size="A4" orientation="landscape" style={styles.page}>
           <Text style={styles.title}>Sample List - {status} (Page {pageIndex + 1} of {pageCount})</Text>
           <View style={styles.table}>
             {/* Table Header */}

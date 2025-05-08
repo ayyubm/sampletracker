@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { STATUS_OPTIONS, BUYER_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
+import { STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import SampleListPDF from './SampleListPDF';
+import DesignSheetPDF from './DesignSheetPDF';
+import { getDocuments } from '../lib/firebase/firebaseUtils';
 
 // Define a base Sample interface that includes all fields needed by SampleListPDF
 // and any fields needed for processing/filtering within this modal.
@@ -15,6 +17,8 @@ interface Sample {
   style: string;
   color: string;
   typeOfSample: string;
+  typeOfFabric?: string;  // Used for design sheet
+  patternNo?: string;     // Used for design sheet
   noOfPieces: number;
   requiredCompletionDate: string;
   // Add any other properties if they are accessed from 'sample' object
@@ -27,6 +31,12 @@ interface SampleWithImage extends Sample {
 interface PrintSamplesModalProps {
   onClose: () => void;
   samples: Sample[]; 
+}
+
+interface Buyer {
+  id: string;
+  buyerId: string;
+  name: string;
 }
 
 // Helper function to convert blob to data URI
@@ -45,6 +55,26 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
   const [selectedCategory, setSelectedCategory] = useState('');
   const [processedSamples, setProcessedSamples] = useState<SampleWithImage[]>([]);
   const [isProcessingImages, setIsProcessingImages] = useState(false);
+  const [printType, setPrintType] = useState<'list' | 'design'>('list'); // Track the type of print to generate
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [loadingBuyers, setLoadingBuyers] = useState(true);
+
+  // Fetch buyers from Firebase
+  useEffect(() => {
+    const fetchBuyers = async () => {
+      setLoadingBuyers(true);
+      try {
+        const buyersData = await getDocuments('buyer');
+        setBuyers(buyersData as Buyer[]);
+      } catch (err) {
+        console.error('Error fetching buyers:', err);
+      } finally {
+        setLoadingBuyers(false);
+      }
+    };
+
+    fetchBuyers();
+  }, []);
 
   // Debug log to check samples before filtering
   console.log(`Total samples: ${samples.length}`, samples[0]?.status);
@@ -121,7 +151,7 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
       isMounted = false;
       console.log('useEffect: Cleanup function ran.');
     };
-  }, [filteredSamples]);
+  }, [filteredSamples, printType]);
 
   // Create a display title based on active filters
   const getFilterTitle = () => {
@@ -144,7 +174,8 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
     }
     if (selectedCategory) parts.push(selectedCategory.toLowerCase());
     
-    return parts.length > 0 ? `samples-${parts.join('-')}` : 'all-samples';
+    const prefix = printType === 'list' ? 'samples' : 'design-sheet';
+    return parts.length > 0 ? `${prefix}-${parts.join('-')}` : `${prefix}-all`;
   };
 
   // Determine if any filter is applied
@@ -159,6 +190,27 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
           <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
             Print Samples
           </h3>
+          
+          <div className="mb-4">
+            <div className="flex justify-between items-center border rounded-md overflow-hidden">
+              <button
+                onClick={() => setPrintType('list')}
+                className={`py-2 px-4 flex-1 ${printType === 'list' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Sample List
+              </button>
+              <button
+                onClick={() => setPrintType('design')}
+                className={`py-2 px-4 flex-1 ${printType === 'design' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Design Sheet
+              </button>
+            </div>
+          </div>
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -189,13 +241,18 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
               value={selectedBuyer}
               onChange={(e) => setSelectedBuyer(e.target.value)}
               className="w-full border rounded-md p-2"
+              disabled={loadingBuyers}
             >
               <option value="">Any Buyer</option>
-              {BUYER_OPTIONS.map((buyer) => (
-                <option key={buyer} value={buyer}>
-                  {buyer}
-                </option>
-              ))}
+              {loadingBuyers ? (
+                <option disabled>Loading buyers...</option>
+              ) : (
+                buyers.map((buyer) => (
+                  <option key={buyer.id} value={buyer.name}>
+                    {buyer.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
           
@@ -227,7 +284,11 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
             
             {(filteredSamples.length > 0 || (isProcessingImages && isAnyFilterApplied)) ? (
               <PDFDownloadLink
-                document={<SampleListPDF samples={processedSamples as any} status={getFilterTitle()} />}
+                document={
+                  printType === 'list' 
+                    ? <SampleListPDF samples={processedSamples as any} status={getFilterTitle()} />
+                    : <DesignSheetPDF samples={processedSamples as any} title={getFilterTitle()} />
+                }
                 fileName={`${getFilenameFromFilters()}.pdf`}
                 className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
                   isProcessingImages ? 'opacity-50 cursor-not-allowed' : ''
@@ -244,11 +305,19 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
               </button>
             ) : (
               <PDFDownloadLink
-                document={<SampleListPDF samples={samples as any} status="All Samples" />}
-                fileName={`all-samples.pdf`}
-                className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600`}
+                document={
+                  printType === 'list'
+                    ? <SampleListPDF samples={samples as any} status="All Samples" />
+                    : <DesignSheetPDF samples={processedSamples.length > 0 ? processedSamples as any : samples as any} title="All Samples" />
+                }
+                fileName={`${printType === 'list' ? 'all-samples' : 'design-sheet-all'}.pdf`}
+                className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
+                  printType === 'design' && isProcessingImages ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Download All Samples
+                {printType === 'design' && isProcessingImages 
+                  ? 'Processing Images...' 
+                  : `Download ${printType === 'list' ? 'Sample List' : 'Design Sheet'}`}
               </PDFDownloadLink>
             )}
           </div>

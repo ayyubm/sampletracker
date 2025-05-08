@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#000',
     marginTop: 5,
+    borderBottom: 0, // Remove bottom border from table to avoid double borders
   },
   tableRow: {
     flexDirection: 'row',
@@ -113,9 +114,23 @@ const ImageOrFallback = ({ dataURI }: { dataURI?: string }) => {
   return <Text style={styles.noImage}>No image</Text>;
 };
 
+// Define table header component for reuse
+const TableHeader = () => (
+  <View style={[styles.tableRow, styles.tableHeader]}>
+    <Text style={[styles.tableHeaderCell, styles.id, styles.textCell]}>Sample ID</Text>
+    <Text style={[styles.tableHeaderCell, styles.image]}>Style Image</Text>
+    <Text style={[styles.tableHeaderCell, styles.style, styles.textCell]}>Style</Text>
+    <Text style={[styles.tableHeaderCell, styles.buyer, styles.textCell]}>Buyer</Text>
+    <Text style={[styles.tableHeaderCell, styles.color, styles.textCell]}>Color</Text>
+    <Text style={[styles.tableHeaderCell, styles.type, styles.textCell]}>Type</Text>
+    <Text style={[styles.tableHeaderCell, styles.pieces, styles.textCell]}>Pieces</Text>
+    <Text style={[styles.tableHeaderCell, styles.date, styles.textCell]}>Required Date</Text>
+  </View>
+);
+
 const SampleListPDF = ({ samples, status }: SampleListPDFProps) => {
   // Calculate how many samples per page (adjust based on your needs)
-  const SAMPLES_PER_PAGE = 10; // Increased for landscape orientation
+  const SAMPLES_PER_PAGE = 6; // Reduced to ensure no overflow
   
   // Calculate how many pages we need
   const pageCount = Math.ceil(samples.length / SAMPLES_PER_PAGE);
@@ -133,16 +148,7 @@ const SampleListPDF = ({ samples, status }: SampleListPDFProps) => {
           <Text style={styles.title}>Sample List - {status} (Page {pageIndex + 1} of {pageCount})</Text>
           <View style={styles.table}>
             {/* Table Header */}
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={[styles.tableHeaderCell, styles.id, styles.textCell]}>Sample ID</Text>
-              <Text style={[styles.tableHeaderCell, styles.image]}>Style Image</Text>
-              <Text style={[styles.tableHeaderCell, styles.style, styles.textCell]}>Style</Text>
-              <Text style={[styles.tableHeaderCell, styles.buyer, styles.textCell]}>Buyer</Text>
-              <Text style={[styles.tableHeaderCell, styles.color, styles.textCell]}>Color</Text>
-              <Text style={[styles.tableHeaderCell, styles.type, styles.textCell]}>Type</Text>
-              <Text style={[styles.tableHeaderCell, styles.pieces, styles.textCell]}>Pieces</Text>
-              <Text style={[styles.tableHeaderCell, styles.date, styles.textCell]}>Required Date</Text>
-            </View>
+            <TableHeader />
             
             {/* Table Rows for this page */}
             {pageSamples.map((sample) => (

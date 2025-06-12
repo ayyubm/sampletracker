@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getDocument, updateDocument, getDocuments, uploadFile } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS, FABRIC_CATEGORY_OPTIONS } from '../lib/constants';
+import { SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS, FABRIC_CATEGORY_OPTIONS } from '../lib/constants';
 import { PDFDownloadLink, BlobProvider } from '@react-pdf/renderer';
 import SamplingProgramSheet from './SamplingProgramSheet';
 import { Sample } from '../types/sample';

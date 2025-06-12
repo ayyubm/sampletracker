@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import { getDocuments, addDocument, updateDocument, deleteDocument } from '../../lib/firebase/firebaseUtils';
-import { BUYER_OPTIONS } from '../../lib/constants';
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
@@ -94,24 +93,7 @@ const BuyerManagement: React.FC = () => {
   const cancelDelete = () => {
     setDeleteConfirmation(null);
   };
-
-  // const initializeBuyersFromConstants = async () => {
-  //   setIsInitializing(true);
-  //   try {
-  //     for (let i = 0; i < BUYER_OPTIONS.length; i++) {
-  //       const buyerName = BUYER_OPTIONS[i];
-  //       const buyerId = `Buyer${(i + 1).toString().padStart(4, '0')}`;
-  //       const newBuyer: Buyer = { buyerId, name: buyerName };
-  //       await addDocument('buyer', newBuyer);
-  //     }
-  //     await fetchBuyers(); // Refresh the buyers list
-  //   } catch (error) {
-  //     console.error('Error initializing buyers:', error);
-  //   } finally {
-  //     setIsInitializing(false);
-  //   }
-  // };
-
+  
   if (loading) {
     return <div>Loading...</div>;
   }

@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [showMasterExcelModal, setShowMasterExcelModal] = useState(false);
   const [samples, setSamples] = useState<any[]>([]);
   const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
+  const [isUpdatingFabricCategory, setIsUpdatingFabricCategory] = useState(false);
 
   useEffect(() => {
     const fetchSamples = async () => {
@@ -51,6 +52,47 @@ export default function Dashboard() {
   const canViewMasterExcel = userData?.team === 'Viewer' || 
                             userData?.team === 'Admin' || 
                             userData?.team === 'Management';
+
+  const handleBulkUpdateFabricCategory = async () => {
+    if (!userData?.isAdmin) {
+      alert('Only administrators can perform this operation.');
+      return;
+    }
+
+    const confirmUpdate = window.confirm(
+      'This will set the fabric category to "Woven" for ALL samples (including archived ones). This action cannot be undone. Are you sure you want to continue?'
+    );
+
+    if (!confirmUpdate) return;
+
+    setIsUpdatingFabricCategory(true);
+    try {
+      const response = await fetch('/api/bulk-update-fabric-category', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userToken: userData.email, // Using email as token for simplicity
+          fabricCategory: 'Woven'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Success! ${result.message}`);
+        setRefreshTrigger(prev => prev + 1); // Refresh the samples list
+      } else {
+        throw new Error(result.error || 'Failed to update fabric categories');
+      }
+    } catch (error) {
+      console.error('Error updating fabric categories:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to update fabric categories'}`);
+    } finally {
+      setIsUpdatingFabricCategory(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -95,6 +137,17 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex space-x-2">
+            {/* Admin-only button for bulk fabric category update */}
+            {userData?.isAdmin && (
+              <button
+                onClick={handleBulkUpdateFabricCategory}
+                disabled={isUpdatingFabricCategory}
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                title="Set all samples fabric category to Woven (Admin only)"
+              >
+                {isUpdatingFabricCategory ? 'Updating...' : 'Set All to Woven'}
+              </button>
+            )}
             {canViewMasterExcel && (
               <button
                 onClick={() => setShowMasterExcelModal(true)}
@@ -132,7 +185,7 @@ export default function Dashboard() {
       {showPrintModal && (
         <PrintSamplesModal
           onClose={() => setShowPrintModal(false)}
-          samples={samples}
+          samples={samples.filter(sample => !sample.isArchived)}
         />
       )}
       {showMasterExcelModal && (

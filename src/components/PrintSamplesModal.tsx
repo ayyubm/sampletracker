@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
+import { STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS, SEASON_OPTIONS } from '../lib/constants';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import SampleListPDF from './SampleListPDF';
 import DesignSheetPDF from './DesignSheetPDF';
@@ -12,7 +12,14 @@ interface Sample {
   status: string;         // Used for filtering in this modal
   buyer: string;          // Used for filtering in this modal
   productCategory?: string; // Used for filtering in this modal
+  season?: string;        // Used for filtering in this modal
   imageUrl?: string;      // Used for image processing in this modal
+  changeTracking?: {      // Used for user filtering
+    [key: string]: {
+      name: string;
+      timestamp: string;
+    };
+  };
   // Fields required by SampleListPDF
   style: string;
   color: string;
@@ -53,11 +60,22 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedBuyer, setSelectedBuyer] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSeason, setSelectedSeason] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
   const [processedSamples, setProcessedSamples] = useState<SampleWithImage[]>([]);
   const [isProcessingImages, setIsProcessingImages] = useState(false);
   const [printType, setPrintType] = useState<'list' | 'design'>('list'); // Track the type of print to generate
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(true);
+
+  // Get unique users from samples
+  const uniqueUsers = useMemo(() => {
+    const users = samples
+      .map(sample => sample.changeTracking?.['sampleId']?.name)
+      .filter(Boolean)
+      .filter((name, index, array) => array.indexOf(name) === index);
+    return users.sort();
+  }, [samples]);
 
   // Fetch buyers from Firebase
   useEffect(() => {
@@ -84,10 +102,13 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
       const statusMatch = selectedStatus ? sample.status === selectedStatus : true;
       const buyerMatch = selectedBuyer ? sample.buyer === selectedBuyer : true;
       const categoryMatch = selectedCategory ? sample.productCategory === selectedCategory : true;
+      const seasonMatch = selectedSeason ? sample.season === selectedSeason : true;
+      const sampleCreator = sample.changeTracking?.['sampleId']?.name || '';
+      const userMatch = selectedUser ? sampleCreator === selectedUser : true;
       
-      return statusMatch && buyerMatch && categoryMatch;
+      return statusMatch && buyerMatch && categoryMatch && seasonMatch && userMatch;
     });
-  }, [samples, selectedStatus, selectedBuyer, selectedCategory]);
+  }, [samples, selectedStatus, selectedBuyer, selectedCategory, selectedSeason, selectedUser]);
 
   useEffect(() => {
     console.log('useEffect triggered for filteredSamples. Length:', filteredSamples.length);
@@ -159,6 +180,8 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
     if (selectedStatus) filters.push(`Status: ${selectedStatus}`);
     if (selectedBuyer) filters.push(`Buyer: ${selectedBuyer}`);
     if (selectedCategory) filters.push(`Category: ${selectedCategory}`);
+    if (selectedSeason) filters.push(`Season: ${selectedSeason}`);
+    if (selectedUser) filters.push(`Created By: ${selectedUser}`);
     
     return filters.length > 0 ? filters.join(' | ') : 'All Samples';
   };
@@ -173,13 +196,19 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
       parts.push(`${firstWord}-buyer`);
     }
     if (selectedCategory) parts.push(selectedCategory.toLowerCase());
+    if (selectedSeason) parts.push(selectedSeason.toLowerCase());
+    if (selectedUser) {
+      // Use just the first word of the user name to keep filename shorter
+      const firstWord = selectedUser.split(' ')[0].toLowerCase();
+      parts.push(`${firstWord}-user`);
+    }
     
     const prefix = printType === 'list' ? 'samples' : 'design-sheet';
     return parts.length > 0 ? `${prefix}-${parts.join('-')}` : `${prefix}-all`;
   };
 
   // Determine if any filter is applied
-  const isAnyFilterApplied = selectedStatus || selectedBuyer || selectedCategory;
+  const isAnyFilterApplied = selectedStatus || selectedBuyer || selectedCategory || selectedSeason || selectedUser;
 
   console.log('PrintSamplesModal Render. isProcessingImages:', isProcessingImages, 'processedSamples Length:', processedSamples.length, 'filteredSamples Length:', filteredSamples.length);
 
@@ -269,6 +298,42 @@ export default function PrintSamplesModal({ onClose, samples }: PrintSamplesModa
               {PRODUCT_CATEGORY_OPTIONS.map((category) => (
                 <option key={category} value={category}>
                   {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Season
+            </label>
+            <select
+              value={selectedSeason}
+              onChange={(e) => setSelectedSeason(e.target.value)}
+              className="w-full border rounded-md p-2"
+            >
+              <option value="">Any Season</option>
+              {SEASON_OPTIONS.map((season) => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Created By
+            </label>
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="w-full border rounded-md p-2"
+            >
+              <option value="">Any User</option>
+              {uniqueUsers.map((user) => (
+                <option key={user} value={user}>
+                  {user}
                 </option>
               ))}
             </select>

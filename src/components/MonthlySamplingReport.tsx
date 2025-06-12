@@ -36,6 +36,7 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  fabricCategory: string;
   // We'll need to derive sewnDate from other data
 }
 
@@ -86,6 +87,7 @@ const MonthlySamplingReport: React.FC = () => {
   const [viewLevel, setViewLevel] = useState<ViewLevel>('yearly');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [yearlyData, setYearlyData] = useState<YearlySummary[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlySummary[]>([]);
   const [detailedData, setDetailedData] = useState<DetailedSummary[]>([]);
@@ -158,6 +160,13 @@ const MonthlySamplingReport: React.FC = () => {
     fetchData();
   }, []);
 
+  // Reprocess data when fabric category filter changes
+  useEffect(() => {
+    if (processedSamples.length > 0) {
+      processYearlyData(processedSamples);
+    }
+  }, [fabricCategoryFilter, processedSamples]);
+
   // Process data for yearly view
   const processYearlyData = (samples: any[]) => {
     // Process yearly data
@@ -172,7 +181,9 @@ const MonthlySamplingReport: React.FC = () => {
       }>;
     }>();
 
-    samples.forEach(sample => {
+    samples
+      .filter(sample => fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
+      .forEach(sample => {
       const reqDate = new Date(sample.requiredCompletionDate);
       const sewnDate = sample.sewnDate ? new Date(sample.sewnDate) : null;
       
@@ -304,15 +315,17 @@ const MonthlySamplingReport: React.FC = () => {
       });
     }
 
-    processedSamples.forEach(sample => {
-      const reqDate = new Date(sample.requiredCompletionDate);
-      const sewnDate = sample.sewnDate ? new Date(sample.sewnDate) : null;
-      
-      // Get the number of pieces for this sample
-      const pieceCount = Number(sample.noOfPieces) || 0;
-      const sewnPieceCount = Number(sample.sewnPieces) || 0;
-      
-      // Only process samples for the selected year
+    processedSamples
+      .filter(sample => fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
+      .forEach(sample => {
+        const reqDate = new Date(sample.requiredCompletionDate);
+        const sewnDate = sample.sewnDate ? new Date(sample.sewnDate) : null;
+        
+        // Get the number of pieces for this sample
+        const pieceCount = Number(sample.noOfPieces) || 0;
+        const sewnPieceCount = Number(sample.sewnPieces) || 0;
+        
+        // Only process samples for the selected year
       if (reqDate.getFullYear() === selectedYear) {
         const reqMonth = reqDate.getMonth();
         
@@ -399,7 +412,7 @@ const MonthlySamplingReport: React.FC = () => {
       .sort((a, b) => a.month - b.month);
     
     setMonthlyData(monthlySummary);
-  }, [selectedYear, processedSamples]);
+  }, [selectedYear, processedSamples, fabricCategoryFilter]);
 
   // Generate detailed data when a month is selected
   useEffect(() => {
@@ -408,15 +421,17 @@ const MonthlySamplingReport: React.FC = () => {
     // Create a map to track data by buyer first, then by sample type
     const buyerMap = new Map<string, Map<string, { requested: number; sewn: number }>>();
     
-    processedSamples.forEach(sample => {
-      const reqDate = new Date(sample.requiredCompletionDate);
-      const sewnDate = sample.sewnDate ? new Date(sample.sewnDate) : null;
-      
-      // Get the number of pieces for this sample
-      const pieceCount = Number(sample.noOfPieces) || 0;
-      const sewnPieceCount = Number(sample.sewnPieces) || 0;
-      
-      // Only process samples for the selected year and month
+    processedSamples
+      .filter(sample => fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
+      .forEach(sample => {
+        const reqDate = new Date(sample.requiredCompletionDate);
+        const sewnDate = sample.sewnDate ? new Date(sample.sewnDate) : null;
+        
+        // Get the number of pieces for this sample
+        const pieceCount = Number(sample.noOfPieces) || 0;
+        const sewnPieceCount = Number(sample.sewnPieces) || 0;
+        
+        // Only process samples for the selected year and month
       if (reqDate.getFullYear() === selectedYear && reqDate.getMonth() === selectedMonth) {
         if (!buyerMap.has(sample.buyer)) {
           buyerMap.set(sample.buyer, new Map());
@@ -471,7 +486,7 @@ const MonthlySamplingReport: React.FC = () => {
     });
     
     setDetailedData(detailedSummary);
-  }, [selectedYear, selectedMonth, processedSamples]);
+  }, [selectedYear, selectedMonth, processedSamples, fabricCategoryFilter]);
 
   // Handler functions
   const handleYearClick = (year: number) => {
@@ -591,6 +606,28 @@ const MonthlySamplingReport: React.FC = () => {
                 <ArrowLeftIcon /> Back
               </button>
             )}
+          </div>
+
+          {/* Fabric Category Filter */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fabric Category Filter
+            </label>
+            <div className="flex space-x-2">
+              {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setFabricCategoryFilter(category)}
+                  className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                    fabricCategoryFilter === category
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Chart Section */}

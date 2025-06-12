@@ -17,6 +17,7 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  fabricCategory: string;
   changeTracking?: {
     archived?: {
       timestamp: string;
@@ -88,6 +89,7 @@ interface DailySummary {
 export default function DailySamplingStatus() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [loading, setLoading] = useState(true);
   const [statusData, setStatusData] = useState<BuyerStatusData[]>([]);
   const [dailySummary, setDailySummary] = useState<DailySummary>({
@@ -148,7 +150,8 @@ export default function DailySamplingStatus() {
                 sample.buyerId === buyer.buyerId && 
                 ((sample.isArchived === undefined || sample.isArchived === false) || 
                  (sample.changeTracking?.archived?.timestamp && 
-                  sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
+                  sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate)) &&
+                (fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
               ) {
                 const totalPieces = Number(sample.noOfPieces) || 0;
                 const sewnPieces = totalSewnPieces[sample.sampleId] || 0;
@@ -233,7 +236,7 @@ export default function DailySamplingStatus() {
     };
 
     fetchData();
-  }, [selectedDate]);
+  }, [selectedDate, fabricCategoryFilter]);
 
   const getSampleType = (type: string): keyof BuyerStatusData['openingBalance'] => {
     type = type.toUpperCase();
@@ -261,13 +264,37 @@ export default function DailySamplingStatus() {
               <h1 className="text-2xl font-bold">Daily Sampling Status</h1>
             </div>
             
-            <div className="w-64">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full border rounded-md p-2"
-              />
+            <div className="flex items-center gap-4">
+              <div>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="border rounded-md p-2"
+                />
+              </div>
+              
+              {/* Fabric Category Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Fabric Category:
+                </label>
+                <div className="flex space-x-2">
+                  {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setFabricCategoryFilter(category)}
+                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        fabricCategoryFilter === category
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

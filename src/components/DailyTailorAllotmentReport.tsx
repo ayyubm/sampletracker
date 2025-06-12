@@ -34,6 +34,7 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  fabricCategory: string;
   changeTracking?: {
     archived?: {
       timestamp: string;
@@ -62,6 +63,7 @@ const DailyTailorAllotmentReport: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [reportData, setReportData] = useState<BuyerData[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ const DailyTailorAllotmentReport: React.FC = () => {
     } else if (user) {
       fetchReportData();
     }
-  }, [user, loading, router, selectedDate]);
+  }, [user, loading, router, selectedDate, fabricCategoryFilter]);
 
   const fetchReportData = async () => {
     setDataLoading(true);
@@ -106,7 +108,8 @@ const DailyTailorAllotmentReport: React.FC = () => {
           sample.fabricTrimsReceiptDate <= selectedDate &&
           ((sample.isArchived === undefined || sample.isArchived === false) || 
            (sample.changeTracking?.archived?.timestamp && 
-            sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
+            sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate)) &&
+          (fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
         ) {
           if (!sampleCounts[sample.buyerId]) {
             sampleCounts[sample.buyerId] = { FIT: 0, PP: 0, GPT: 0, SMS: 0, Other: 0 };
@@ -189,15 +192,39 @@ const DailyTailorAllotmentReport: React.FC = () => {
         </button>
         <h1 className="text-2xl font-bold">Total Pending Samples Report</h1>
       </div>
-      <div className="mb-4">
-        <label htmlFor="date" className="mr-2">Select Date:</label>
-        <input
-          type="date"
-          id="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border rounded p-1"
-        />
+      <div className="mb-4 flex items-center gap-6">
+        <div className="flex items-center">
+          <label htmlFor="date" className="mr-2">Select Date:</label>
+          <input
+            type="date"
+            id="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border rounded p-1"
+          />
+        </div>
+
+        {/* Fabric Category Filter */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Fabric Category:
+          </label>
+          <div className="flex space-x-2">
+            {(['All', 'Knit', 'Woven'] as const).map((category) => (
+              <button
+                key={category}
+                onClick={() => setFabricCategoryFilter(category)}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  fabricCategoryFilter === category
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       {dataLoading && <p>Loading report data...</p>}
       {error && <p className="text-red-500">{error}</p>}

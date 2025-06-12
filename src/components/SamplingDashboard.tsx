@@ -16,6 +16,7 @@ interface Sample {
   fabricTrimsReceiptDate: string;
   status: string;
   isArchived: boolean;
+  fabricCategory: string;
 }
 
 interface GroupedSamples {
@@ -75,6 +76,7 @@ export default function SamplingDashboard() {
   const [loading, setLoading] = useState(true);
   const [allSamples, setAllSamples] = useState<Sample[]>([]);
   const [selectedBuyer, setSelectedBuyer] = useState<string>('all');
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [buyers, setBuyers] = useState<string[]>([]);
   const [selectedSection, setSelectedSection] = useState<keyof GroupedSamples | null>(null);
 
@@ -97,12 +99,20 @@ export default function SamplingDashboard() {
   }, []);
 
   useEffect(() => {
-    const filteredSamples = selectedBuyer === 'all' 
-      ? allSamples 
-      : allSamples.filter(sample => sample.buyer === selectedBuyer);
+    let filteredSamples = allSamples;
+    
+    // Filter by buyer
+    if (selectedBuyer !== 'all') {
+      filteredSamples = filteredSamples.filter(sample => sample.buyer === selectedBuyer);
+    }
+    
+    // Filter by fabric category
+    if (fabricCategoryFilter !== 'All') {
+      filteredSamples = filteredSamples.filter(sample => sample.fabricCategory === fabricCategoryFilter);
+    }
     
     groupSamples(filteredSamples);
-  }, [selectedBuyer, allSamples]);
+  }, [selectedBuyer, fabricCategoryFilter, allSamples]);
 
   const groupSamples = (samplesToGroup: Sample[]) => {
     const today = new Date();
@@ -214,23 +224,47 @@ export default function SamplingDashboard() {
           </button>
           <h1 className="text-2xl font-bold">Sampling Dashboard</h1>
         </div>
-        <div className="flex items-center">
-          <label htmlFor="buyerFilter" className="mr-2 text-gray-700">
-            Filter by Buyer:
-          </label>
-          <select
-            id="buyerFilter"
-            value={selectedBuyer}
-            onChange={(e) => setSelectedBuyer(e.target.value)}
-            className="border rounded-md px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Buyers</option>
-            {buyers.map((buyer) => (
-              <option key={buyer} value={buyer}>
-                {buyer}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center">
+            <label htmlFor="buyerFilter" className="mr-2 text-gray-700">
+              Filter by Buyer:
+            </label>
+            <select
+              id="buyerFilter"
+              value={selectedBuyer}
+              onChange={(e) => setSelectedBuyer(e.target.value)}
+              className="border rounded-md px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Buyers</option>
+              {buyers.map((buyer) => (
+                <option key={buyer} value={buyer}>
+                  {buyer}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Fabric Category Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Fabric Category:
+            </label>
+            <div className="flex space-x-2">
+              {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setFabricCategoryFilter(category)}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    fabricCategoryFilter === category
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

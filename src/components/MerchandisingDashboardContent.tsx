@@ -20,6 +20,7 @@ interface Sample {
   style: string;
   patternStatus: string;
   expectedCompletionDate: string;
+  fabricCategory: string;
   remarks: { text: string; timestamp: string; user: string }[];
   changeTracking: {
     [key: string]: {
@@ -53,6 +54,7 @@ const MerchandisingDashboardContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string>('');
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [startDate, setStartDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [changes, setChanges] = useState<Change[]>([]);
@@ -82,7 +84,13 @@ const MerchandisingDashboardContent: React.FC = () => {
       setDateError('');
 
       const allSamples = await getDocuments('samples') as Sample[];
-      const buyerSamples = allSamples.filter(sample => sample.buyerId === selectedBuyerId);
+      let buyerSamples = allSamples.filter(sample => sample.buyerId === selectedBuyerId);
+      
+      // Filter by fabric category
+      if (fabricCategoryFilter !== 'All') {
+        buyerSamples = buyerSamples.filter(sample => sample.fabricCategory === fabricCategoryFilter);
+      }
+      
       const selectedDateChanges: Change[] = [];
 
       buyerSamples.forEach(sample => {
@@ -134,7 +142,7 @@ const MerchandisingDashboardContent: React.FC = () => {
     };
 
     validateAndFetchChanges();
-  }, [selectedBuyerId, startDate, endDate]);
+  }, [selectedBuyerId, fabricCategoryFilter, startDate, endDate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -165,7 +173,7 @@ const MerchandisingDashboardContent: React.FC = () => {
         
         <main className="flex-1 flex flex-col p-4 overflow-hidden">
           <div className="mb-4 flex flex-col space-y-4">
-            <div className="flex space-x-4 items-center">
+            <div className="flex space-x-4 items-center flex-wrap">
               <select 
                 value={selectedBuyerId} 
                 onChange={(e) => setSelectedBuyerId(e.target.value)}
@@ -176,6 +184,7 @@ const MerchandisingDashboardContent: React.FC = () => {
                   <option key={buyer.id} value={buyer.buyerId}>{buyer.name}</option>
                 ))}
               </select>
+              
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">From:</span>
                 <input
@@ -191,6 +200,28 @@ const MerchandisingDashboardContent: React.FC = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                   className="p-2 border rounded"
                 />
+              </div>
+
+              {/* Fabric Category Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Fabric Category:
+                </label>
+                <div className="flex space-x-2">
+                  {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setFabricCategoryFilter(category)}
+                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        fabricCategoryFilter === category
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             {dateError && (

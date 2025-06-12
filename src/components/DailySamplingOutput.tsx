@@ -30,6 +30,7 @@ interface Sample {
   status: string;
   noOfPieces: number;
   isArchived: boolean;
+  fabricCategory: string;
   changeTracking?: {
     archived?: {
       timestamp: string;
@@ -131,6 +132,7 @@ export default function DailySamplingOutput() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedBuyer, setSelectedBuyer] = useState<string>('');
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [pendingSamples, setPendingSamples] = useState<PendingSampleCount>({
     FIT: 0,
@@ -216,7 +218,8 @@ export default function DailySamplingOutput() {
           sample.fabricTrimsReceiptDate <= selectedDate &&
           ((sample.isArchived === undefined || sample.isArchived === false) || 
             (sample.changeTracking?.archived?.timestamp && 
-             sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate))
+             sample.changeTracking.archived.timestamp.split('T')[0] >= selectedDate)) &&
+          (fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)
         ) {
           const sampleType = getSampleType(sample.typeOfSample);
           grouped[sampleType].push(sample);
@@ -257,7 +260,7 @@ export default function DailySamplingOutput() {
     };
 
     fetchData();
-  }, [selectedBuyer, selectedDate]);
+  }, [selectedBuyer, selectedDate, fabricCategoryFilter]);
 
   const getSampleType = (type: string): keyof PendingSampleCount => {
     if (type === 'FIT') return 'FIT';
@@ -503,6 +506,29 @@ export default function DailySamplingOutput() {
             className="w-full border rounded-md p-2"
           />
         </div>
+
+        {selectedBuyer && (
+          <div className="w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fabric Category
+            </label>
+            <div className="flex space-x-1">
+              {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setFabricCategoryFilter(category)}
+                  className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                    fabricCategoryFilter === category
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {selectedBuyer && (
           <div className="w-64">

@@ -8,6 +8,7 @@ interface Sample {
   totalFabricQtyRecieved: number;
   noOfPieces: number;
   balanceLeftoverFabric: number;
+  fabricCategory: string;
 }
 
 interface ProductionSummary {
@@ -70,7 +71,8 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
             requiredFabricQty: sample.requiredFabricQty || 0,
             totalFabricQtyRecieved: sample.totalFabricQtyRecieved || 0,
             noOfPieces: sample.noOfPieces || 0,
-            balanceLeftoverFabric: sample.balanceLeftoverFabric || 0
+            balanceLeftoverFabric: sample.balanceLeftoverFabric || 0,
+            fabricCategory: sample.fabricCategory || ''
           });
         }
 
@@ -99,6 +101,11 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
     }
     if (!summary.SEW || !sampleData?.totalFabricQtyRecieved) return 0;
     return ((sampleData.totalFabricQtyRecieved - balFab) / summary.SEW).toFixed(2);
+  };
+
+  const getConsumptionUnit = () => {
+    if (!sampleData?.fabricCategory) return 'meters/piece';
+    return sampleData.fabricCategory === 'Knit' ? 'grams/piece' : 'meters/piece';
   };
 
   return (
@@ -135,7 +142,7 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
                 <span className="text-2xl font-bold text-green-600">
                   {calculateApprovedConsumption()}
                 </span>
-                <span className="text-sm text-green-600 block">meters/piece</span>
+                <span className="text-sm text-green-600 block">{getConsumptionUnit()}</span>
               </div>
               
               <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -143,7 +150,7 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
                 <span className="text-2xl font-bold text-purple-600">
                   {calculateActualConsumption()}
                 </span>
-                <span className="text-sm text-purple-600 block">meters/piece</span>
+                <span className="text-sm text-purple-600 block">{getConsumptionUnit()}</span>
               </div>
             </div>
           </>

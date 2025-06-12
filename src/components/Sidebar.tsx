@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard, TrendingUp } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard, TrendingUp, List } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -83,6 +83,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           <button onClick={() => handleNavigation('/buyer-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
             <Users size={18} className="inline-block mr-2" />
             Buyer Management
+          </button>
+        )}
+        {userData?.isAdmin && (
+          <button onClick={() => handleNavigation('/dropdown-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <List size={18} className="inline-block mr-2" />
+            Dropdown Management
           </button>
         )}
         {userData?.isAdmin && (

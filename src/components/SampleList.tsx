@@ -15,6 +15,7 @@ import {
   SEASON_OPTIONS,
   PATTERN_STATUS_OPTIONS,
   PRODUCT_CATEGORY_OPTIONS,
+  FABRIC_CATEGORY_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
 import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive, BarChart } from "lucide-react";
@@ -46,6 +47,7 @@ interface Sample {
   washType: string; // Add this line
   noOfPieces: number;
   typeOfFabric: string;
+  fabricCategory: string;
   requiredFabricQty: number;
   totalFabricQtyRecieved: number;
 
@@ -70,6 +72,7 @@ interface SampleListProps {
   clearFiltersFlag: boolean;
   samples: any[];
   setSamples: React.Dispatch<React.SetStateAction<any[]>>;
+  fabricCategoryFilter: 'All' | 'Knit' | 'Woven';
 }
 
 interface SortConfig {
@@ -117,6 +120,7 @@ const SampleList: React.FC<SampleListProps> = ({
   clearFiltersFlag,
   samples,
   setSamples,
+  fabricCategoryFilter,
 }) => {
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
@@ -130,6 +134,7 @@ const SampleList: React.FC<SampleListProps> = ({
     style: "",
     patternStatus: "", // Add this line
     productCategory: "", // Add this line
+    fabricCategory: "",
   });
   const [styleSearch, setStyleSearch] = useState("");
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
@@ -207,7 +212,8 @@ const SampleList: React.FC<SampleListProps> = ({
           (filters.status === "" || sample.status === filters.status) &&
           (filters.style === "" || sample.style === filters.style) &&
           (filters.patternStatus === "" || sample.patternStatus === filters.patternStatus) && // Add this line
-          (filters.productCategory === "" || sample.productCategory === filters.productCategory) // Add this line
+          (filters.productCategory === "" || sample.productCategory === filters.productCategory) && // Add this line
+          (fabricCategoryFilter === "All" || sample.fabricCategory === fabricCategoryFilter)
         );
       })
       .sort((a, b) => {
@@ -224,7 +230,7 @@ const SampleList: React.FC<SampleListProps> = ({
       });
 
     setFilteredSamples(filteredAndSortedSamples);
-  }, [samples, sortConfig, filters]);
+  }, [samples, sortConfig, filters, fabricCategoryFilter]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -257,6 +263,7 @@ const SampleList: React.FC<SampleListProps> = ({
         style: "",
         patternStatus: "",
         productCategory: "", // Add this line
+        fabricCategory: "",
       });
       setStyleSearch("");
     }
@@ -403,6 +410,7 @@ const SampleList: React.FC<SampleListProps> = ({
       style: "",
       patternStatus: "", // Add this line
       productCategory: "", // Add this line
+      fabricCategory: "",
     });
   };
 

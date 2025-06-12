@@ -8,6 +8,7 @@ export interface Sample {
   size: string;
   washType: string;
   typeOfFabric: string;
+  fabricCategory: string;
   color: string;
   imageUrl?: string;
   // Add any other properties that are used in the SamplingProgramSheet

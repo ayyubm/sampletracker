@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showMasterExcelModal, setShowMasterExcelModal] = useState(false);
   const [samples, setSamples] = useState<any[]>([]);
+  const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
 
   useEffect(() => {
     const fetchSamples = async () => {
@@ -73,27 +74,48 @@ export default function Dashboard() {
         >
           Add New Sample
         </button>
-        <div className="flex space-x-2">
-          {canViewMasterExcel && (
+        <div className="flex items-center space-x-4">
+          {/* Fabric Category Toggle */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">Fabric Category:</span>
+            <div className="flex bg-gray-200 rounded-lg p-1">
+              {(['All', 'Knit', 'Woven'] as const).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setFabricCategoryFilter(category)}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    fabricCategoryFilter === category
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            {canViewMasterExcel && (
+              <button
+                onClick={() => setShowMasterExcelModal(true)}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                Print Master Excel
+              </button>
+            )}
             <button
-              onClick={() => setShowMasterExcelModal(true)}
-              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onClick={() => setShowPrintModal(true)}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Print Master Excel
+              Print Samples
             </button>
-          )}
-          <button
-            onClick={() => setShowPrintModal(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Print Samples
-          </button>
-          <button
-            onClick={clearAllFilters}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            Clear All Filters
-          </button>
+            <button
+              onClick={clearAllFilters}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Clear All Filters
+            </button>
+          </div>
         </div>
       </div>
       {showForm && <SampleForm onClose={() => setShowForm(false)} onSampleAdded={handleSampleAdded} />}
@@ -104,6 +126,7 @@ export default function Dashboard() {
           clearFiltersFlag={clearFiltersFlag}
           samples={samples}
           setSamples={setSamples}
+          fabricCategoryFilter={fabricCategoryFilter}
         />
       </div>
       {showPrintModal && (

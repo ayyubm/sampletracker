@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getDocument, updateDocument, getDocuments, uploadFile } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
 import { format } from 'date-fns';
-import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
+import { BUYER_OPTIONS, SAMPLE_TYPE_OPTIONS, STATUS_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS, FABRIC_CATEGORY_OPTIONS } from '../lib/constants';
 import { PDFDownloadLink, BlobProvider } from '@react-pdf/renderer';
 import SamplingProgramSheet from './SamplingProgramSheet';
 import { Sample } from '../types/sample';
@@ -41,6 +41,7 @@ interface SampleData {
   washType: string;
   noOfPieces: number;
   typeOfFabric: string;
+  fabricCategory: string;
   requiredFabricQty: number;
   totalFabricQtyRecieved: number;
 
@@ -82,6 +83,7 @@ const defaultSampleData: SampleData = {
   washType: '',
   noOfPieces: 0,
   typeOfFabric: '',
+  fabricCategory: '',
   requiredFabricQty: 0,
   totalFabricQtyRecieved: 0,
 
@@ -260,6 +262,7 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
     'washType',
     'noOfPieces',
     'typeOfFabric',
+    'fabricCategory',
     'requiredFabricQty',
     'totalFabricQtyRecieved',
 
@@ -418,6 +421,22 @@ export default function SampleDetails({ sampleId, onClose, onSampleUpdated }: Sa
                   >
                     <option value="">Select a category</option>
                     {PRODUCT_CATEGORY_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : key === 'fabricCategory' ? (
+                  <select
+                    name={key}
+                    id={key}
+                    value={value as string}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    required
+                  >
+                    <option value="">Select fabric category</option>
+                    {FABRIC_CATEGORY_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>

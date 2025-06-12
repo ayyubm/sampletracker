@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { addDocument, getDocuments, uploadFile } from '../lib/firebase/firebaseUtils';
 import { useAuth } from '../lib/hooks/useAuth';
-import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS } from '../lib/constants';
+import { SAMPLE_TYPE_OPTIONS, SEASON_OPTIONS, PATTERN_STATUS_OPTIONS, PRODUCT_CATEGORY_OPTIONS, FABRIC_CATEGORY_OPTIONS } from '../lib/constants';
 
 interface Buyer {
   id?: string;
@@ -29,6 +29,7 @@ interface Sample {
   color: string;
   noOfPieces: number;
   typeOfFabric: string;
+  fabricCategory: string;
   requiredFabricQty: number;
   procuredFabricQty: number;
   stockFabricQty: number;
@@ -60,6 +61,7 @@ interface DuplicateSample {
   color: string;
   noOfPieces: number;
   typeOfFabric: string;
+  fabricCategory: string;
   requiredFabricQty: number;
   requiredCompletionDate: string;
   size: string;
@@ -123,6 +125,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
     typeOfSample: '',
     noOfPieces: 0,
     typeOfFabric: '',
+    fabricCategory: '',
     color: '',
     size: '',
     washType: '',
@@ -164,6 +167,7 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
             typeOfSample: duplicateSample.typeOfSample,
             noOfPieces: duplicateSample.noOfPieces,
             typeOfFabric: duplicateSample.typeOfFabric,
+            fabricCategory: duplicateSample.fabricCategory || '',
             color: duplicateSample.color,
             size: duplicateSample.size || '',
             washType: duplicateSample.washType || '',
@@ -475,6 +479,24 @@ export default function SampleForm({ onClose, onSampleAdded, duplicateSample }: 
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="fabricCategory" className="block text-sm font-medium text-gray-700">
+              Fabric Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="fabricCategory"
+              id="fabricCategory"
+              value={formData.fabricCategory}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              required
+            >
+              <option value="">Select fabric category</option>
+              {FABRIC_CATEGORY_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
           <div className="mb-4">
             <label htmlFor="color" className="block text-sm font-medium text-gray-700">Color</label>

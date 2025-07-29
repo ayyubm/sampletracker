@@ -15,9 +15,6 @@ interface ProductionSummary {
   CUT: number;
   SEW: number;
   FINISH: number;
-  ALTER: number;
-  PASS: number;
-  REJECT: number;
 }
 
 interface ProductionSummaryModalProps {
@@ -29,10 +26,7 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
   const [summary, setSummary] = useState<ProductionSummary>({
     CUT: 0,
     SEW: 0,
-    FINISH: 0,
-    ALTER: 0,
-    PASS: 0,
-    REJECT: 0
+    FINISH: 0
   });
   const [sampleData, setSampleData] = useState<Sample | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,18 +42,12 @@ const ProductionSummaryModal: React.FC<ProductionSummaryModalProps> = ({ sampleI
             acc.CUT += sampleOutput.CUT || 0;
             acc.SEW += sampleOutput.SEW || 0;
             acc.FINISH += sampleOutput.FINISH || 0;
-            acc.ALTER += sampleOutput.ALTER || 0;
-            acc.PASS += sampleOutput.PASS || 0;
-            acc.REJECT += sampleOutput.REJECT || 0;
           }
           return acc;
         }, {
           CUT: 0,
           SEW: 0,
-          FINISH: 0,
-          ALTER: 0,
-          PASS: 0,
-          REJECT: 0
+          FINISH: 0
         });
 
         // Fetch sample data

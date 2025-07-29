@@ -51,9 +51,6 @@ interface DailyOutput {
   CUT: number;
   SEW: number;
   FINISH: number;
-  ALTER: number;
-  PASS: number;
-  REJECT: number;
 }
 
 interface SampleTypeOutput {
@@ -69,9 +66,6 @@ interface SampleOutput {
   CUT: number;
   SEW: number;
   FINISH: number;
-  ALTER: number;
-  PASS: number;
-  REJECT: number;
 }
 
 interface GroupedSamples {
@@ -87,9 +81,6 @@ interface StoredSampleOutput {
       CUT: number;
       SEW: number;
       FINISH: number;
-      ALTER: number;
-      PASS: number;
-      REJECT: number;
     };
   };
 }
@@ -102,9 +93,6 @@ interface PreviousOutput {
       CUT: number;
       SEW: number;
       FINISH: number;
-      ALTER: number;
-      PASS: number;
-      REJECT: number;
     };
   };
 }
@@ -113,9 +101,6 @@ const defaultDailyOutput: DailyOutput = {
   CUT: 0,
   SEW: 0,
   FINISH: 0,
-  ALTER: 0,
-  PASS: 0,
-  REJECT: 0,
 };
 
 const defaultSampleTypeOutput: SampleTypeOutput = {

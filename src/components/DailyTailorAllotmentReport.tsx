@@ -52,9 +52,6 @@ interface SamplingOutput {
       CUT: number;
       SEW: number;
       FINISH: number;
-      ALTER: number;
-      PASS: number;
-      REJECT: number;
     };
   };
 }

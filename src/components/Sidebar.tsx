@@ -85,12 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
             Buyer Management
           </button>
         )}
-        {userData?.isAdmin && (
-          <button onClick={() => handleNavigation('/dropdown-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
-            <List size={18} className="inline-block mr-2" />
-            Dropdown Management
-          </button>
-        )}
+        
         {userData?.isAdmin && (
           <button onClick={() => handleNavigation('/user-management')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
             <Settings size={18} className="inline-block mr-2" />

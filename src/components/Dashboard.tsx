@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [showMasterExcelModal, setShowMasterExcelModal] = useState(false);
   const [samples, setSamples] = useState<any[]>([]);
   const [fabricCategoryFilter, setFabricCategoryFilter] = useState<'All' | 'Knit' | 'Woven'>('All');
-  const [isUpdatingFabricCategory, setIsUpdatingFabricCategory] = useState(false);
+  // const [isUpdatingFabricCategory, setIsUpdatingFabricCategory] = useState(false);
 
   useEffect(() => {
     const fetchSamples = async () => {
@@ -53,46 +53,46 @@ export default function Dashboard() {
                             userData?.team === 'Admin' || 
                             userData?.team === 'Management';
 
-  const handleBulkUpdateFabricCategory = async () => {
-    if (!userData?.isAdmin) {
-      alert('Only administrators can perform this operation.');
-      return;
-    }
+  // const handleBulkUpdateFabricCategory = async () => {
+  //   if (!userData?.isAdmin) {
+  //     alert('Only administrators can perform this operation.');
+  //     return;
+  //   }
 
-    const confirmUpdate = window.confirm(
-      'This will set the fabric category to "Woven" for ALL samples (including archived ones). This action cannot be undone. Are you sure you want to continue?'
-    );
+  //   const confirmUpdate = window.confirm(
+  //     'This will set the fabric category to "Woven" for ALL samples (including archived ones). This action cannot be undone. Are you sure you want to continue?'
+  //   );
 
-    if (!confirmUpdate) return;
+  //   if (!confirmUpdate) return;
 
-    setIsUpdatingFabricCategory(true);
-    try {
-      const response = await fetch('/api/bulk-update-fabric-category', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userToken: userData.email, // Using email as token for simplicity
-          fabricCategory: 'Woven'
-        }),
-      });
+  //   setIsUpdatingFabricCategory(true);
+  //   try {
+  //     const response = await fetch('/api/bulk-update-fabric-category', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         userToken: userData.email, // Using email as token for simplicity
+  //         fabricCategory: 'Woven'
+  //       }),
+  //     });
 
-      const result = await response.json();
+  //     const result = await response.json();
 
-      if (result.success) {
-        alert(`Success! ${result.message}`);
-        setRefreshTrigger(prev => prev + 1); // Refresh the samples list
-      } else {
-        throw new Error(result.error || 'Failed to update fabric categories');
-      }
-    } catch (error) {
-      console.error('Error updating fabric categories:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to update fabric categories'}`);
-    } finally {
-      setIsUpdatingFabricCategory(false);
-    }
-  };
+  //     if (result.success) {
+  //       alert(`Success! ${result.message}`);
+  //       setRefreshTrigger(prev => prev + 1); // Refresh the samples list
+  //     } else {
+  //       throw new Error(result.error || 'Failed to update fabric categories');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error updating fabric categories:', error);
+  //     alert(`Error: ${error instanceof Error ? error.message : 'Failed to update fabric categories'}`);
+  //   } finally {
+  //     setIsUpdatingFabricCategory(false);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -138,7 +138,7 @@ export default function Dashboard() {
           </div>
           <div className="flex space-x-2">
             {/* Admin-only button for bulk fabric category update */}
-            {userData?.isAdmin && (
+            {/* {userData?.isAdmin && (
               <button
                 onClick={handleBulkUpdateFabricCategory}
                 disabled={isUpdatingFabricCategory}
@@ -147,7 +147,7 @@ export default function Dashboard() {
               >
                 {isUpdatingFabricCategory ? 'Updating...' : 'Set All to Woven'}
               </button>
-            )}
+            )} */}
             {canViewMasterExcel && (
               <button
                 onClick={() => setShowMasterExcelModal(true)}

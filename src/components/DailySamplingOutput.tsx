@@ -31,6 +31,7 @@ interface Sample {
   noOfPieces: number;
   isArchived: boolean;
   fabricCategory: string;
+  totalFabricQtyRecieved?: number; // Add this field
   changeTracking?: {
     archived?: {
       timestamp: string;
@@ -428,6 +429,15 @@ export default function DailySamplingOutput() {
   };
 
   const getStatusBadge = (sample: Sample) => {
+    // Check for no fabric received first
+    if (Number(sample.totalFabricQtyRecieved) === 0 || !sample.totalFabricQtyRecieved) {
+      return (
+        <div className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full inline-block">
+          No Fabric Received
+        </div>
+      );
+    }
+    
     if (sample.isArchived && sample.changeTracking?.archived?.timestamp) {
       const archiveDate = format(new Date(sample.changeTracking.archived.timestamp), 'dd/MM/yyyy');
       if (sample.changeTracking.archived.timestamp.split('T')[0] > selectedDate) {
@@ -646,7 +656,7 @@ export default function DailySamplingOutput() {
                                   )}
                                   onWheel={handleWheel}
                                   className="w-16 border rounded-md p-1 text-sm"
-                                  disabled={!canSave}
+                                  disabled={!canSave || (Number(sample.totalFabricQtyRecieved) === 0 || !sample.totalFabricQtyRecieved)}
                                 />
                               </td>
                             ))}

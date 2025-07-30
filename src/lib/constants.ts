@@ -68,7 +68,9 @@ export const SEASON_OPTIONS = [
   'SS-27',
   'Spring 26',
   'Summer 26',
-  'Fall 26'
+  'Fall 26',
+  'H1-26',
+  'H2-26'
 ];
 
 export const PATTERN_STATUS_OPTIONS = [

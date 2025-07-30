@@ -246,6 +246,273 @@ export default function DailySamplingStatus() {
     return 'Other';
   };
 
+  const downloadExcel = async () => {
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Get fresh data for detailed breakdown
+    const samples = await getDocuments('samples') as Sample[];
+    const outputs = await getDocuments('dailySamplingOutputs') as StoredSampleOutput[];
+
+    // Detailed Buyer Breakdown
+    const detailedData = [
+      [''],
+      ['', 'Daily Sampling Status Report'],
+      ['', 'Date:', selectedDate],
+      ['', 'Fabric Category Filter:', fabricCategoryFilter],
+      [''],
+      [
+        '',
+        'Buyer',
+        '',
+        'Proto',
+        'Fit',
+        'PP',
+        'GPT',
+        'SMS',
+        'Other',
+        'Total Opening Balance',
+        'New Indents',
+        'Total',
+        'Today\'s Output',
+        'Total Balance',
+        'Tailors Allotted'
+      ],
+      ['']
+    ];
+
+    // Calculate today's output by sample type for each buyer
+    const todaysOutputBySampleType: { [buyerId: string]: { [sampleType: string]: number } } = {};
+    
+    outputs.forEach(output => {
+      if (output.date === selectedDate) {
+        if (!todaysOutputBySampleType[output.buyerId]) {
+          todaysOutputBySampleType[output.buyerId] = {
+            Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0
+          };
+        }
+        
+        Object.entries(output.outputs).forEach(([sampleId, sampleOutput]) => {
+          const sample = samples.find(s => s.sampleId === sampleId);
+          if (sample && 
+              (fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)) {
+            const sampleType = getSampleType(sample.typeOfSample);
+            todaysOutputBySampleType[output.buyerId][sampleType] += (sampleOutput.SEW || 0);
+          }
+        });
+      }
+    });
+
+    statusData.forEach(buyer => {
+      const todaysOutputByType = todaysOutputBySampleType[buyer.buyerId] || {
+        Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0
+      };
+
+      // Buyer header row
+      detailedData.push(['', buyer.buyerName, '', '', '', '', '', '', '', '', '', '', '', '', '']);
+      
+      // Opening Balance row
+      detailedData.push([
+        '',
+        '',
+        'Opening Balance',
+        buyer.openingBalance.Proto > 0 ? buyer.openingBalance.Proto.toString() : '',
+        buyer.openingBalance.Fit > 0 ? buyer.openingBalance.Fit.toString() : '',
+        buyer.openingBalance.PP > 0 ? buyer.openingBalance.PP.toString() : '',
+        buyer.openingBalance.GPT > 0 ? buyer.openingBalance.GPT.toString() : '',
+        buyer.openingBalance.SMS > 0 ? buyer.openingBalance.SMS.toString() : '',
+        buyer.openingBalance.Other > 0 ? buyer.openingBalance.Other.toString() : '',
+        buyer.openingBalance.total.toString(),
+        '',
+        '',
+        '',
+        '',
+        ''
+      ]);
+
+      // New Indents row
+      detailedData.push([
+        '',
+        '',
+        'New Indents rcvd',
+        buyer.newIndents.Proto > 0 ? buyer.newIndents.Proto.toString() : '',
+        buyer.newIndents.Fit > 0 ? buyer.newIndents.Fit.toString() : '',
+        buyer.newIndents.PP > 0 ? buyer.newIndents.PP.toString() : '',
+        buyer.newIndents.GPT > 0 ? buyer.newIndents.GPT.toString() : '',
+        buyer.newIndents.SMS > 0 ? buyer.newIndents.SMS.toString() : '',
+        buyer.newIndents.Other > 0 ? buyer.newIndents.Other.toString() : '',
+        '',
+        buyer.newIndents.total.toString(),
+        '',
+        '',
+        '',
+        ''
+      ]);
+
+      // Total row
+      const totalProto = buyer.openingBalance.Proto + buyer.newIndents.Proto;
+      const totalFit = buyer.openingBalance.Fit + buyer.newIndents.Fit;
+      const totalPP = buyer.openingBalance.PP + buyer.newIndents.PP;
+      const totalGPT = buyer.openingBalance.GPT + buyer.newIndents.GPT;
+      const totalSMS = buyer.openingBalance.SMS + buyer.newIndents.SMS;
+      const totalOther = buyer.openingBalance.Other + buyer.newIndents.Other;
+      const grandTotal = totalProto + totalFit + totalPP + totalGPT + totalSMS + totalOther;
+
+      detailedData.push([
+        '',
+        '',
+        'Total',
+        totalProto > 0 ? totalProto.toString() : '',
+        totalFit > 0 ? totalFit.toString() : '',
+        totalPP > 0 ? totalPP.toString() : '',
+        totalGPT > 0 ? totalGPT.toString() : '',
+        totalSMS > 0 ? totalSMS.toString() : '',
+        totalOther > 0 ? totalOther.toString() : '',
+        '',
+        '',
+        grandTotal.toString(),
+        '',
+        '',
+        ''
+      ]);
+
+      // Today's Output row
+      detailedData.push([
+        '',
+        '',
+        'Today\'s output',
+        todaysOutputByType.Proto > 0 ? todaysOutputByType.Proto.toString() : '',
+        todaysOutputByType.Fit > 0 ? todaysOutputByType.Fit.toString() : '',
+        todaysOutputByType.PP > 0 ? todaysOutputByType.PP.toString() : '',
+        todaysOutputByType.GPT > 0 ? todaysOutputByType.GPT.toString() : '',
+        todaysOutputByType.SMS > 0 ? todaysOutputByType.SMS.toString() : '',
+        todaysOutputByType.Other > 0 ? todaysOutputByType.Other.toString() : '',
+        '',
+        '',
+        '',
+        buyer.todaysOutput.toString(),
+        '',
+        buyer.tailorsAllotted.toString()
+      ]);
+
+      // Total Balance row
+      const balanceProto = totalProto - todaysOutputByType.Proto;
+      const balanceFit = totalFit - todaysOutputByType.Fit;
+      const balancePP = totalPP - todaysOutputByType.PP;
+      const balanceGPT = totalGPT - todaysOutputByType.GPT;
+      const balanceSMS = totalSMS - todaysOutputByType.SMS;
+      const balanceOther = totalOther - todaysOutputByType.Other;
+
+      detailedData.push([
+        '',
+        '',
+        'Total balance',
+        balanceProto > 0 ? balanceProto.toString() : '',
+        balanceFit > 0 ? balanceFit.toString() : '',
+        balancePP > 0 ? balancePP.toString() : '',
+        balanceGPT > 0 ? balanceGPT.toString() : '',
+        balanceSMS > 0 ? balanceSMS.toString() : '',
+        balanceOther > 0 ? balanceOther.toString() : '',
+        '',
+        '',
+        '',
+        '',
+        buyer.totalBalance.toString(),
+        ''
+      ]);
+
+      // Empty row for spacing
+      detailedData.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+    });
+
+    // Calculate totals
+    const totals = {
+      openingBalance: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
+      newIndents: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
+      todaysOutput: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
+      totalBalance: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
+      tailorsAllotted: 0
+    };
+
+    statusData.forEach(buyer => {
+      const todaysOutputByType = todaysOutputBySampleType[buyer.buyerId] || {
+        Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0
+      };
+
+      // Sum opening balances
+      totals.openingBalance.Proto += buyer.openingBalance.Proto;
+      totals.openingBalance.Fit += buyer.openingBalance.Fit;
+      totals.openingBalance.PP += buyer.openingBalance.PP;
+      totals.openingBalance.GPT += buyer.openingBalance.GPT;
+      totals.openingBalance.SMS += buyer.openingBalance.SMS;
+      totals.openingBalance.Other += buyer.openingBalance.Other;
+      totals.openingBalance.total += buyer.openingBalance.total;
+
+      // Sum new indents
+      totals.newIndents.Proto += buyer.newIndents.Proto;
+      totals.newIndents.Fit += buyer.newIndents.Fit;
+      totals.newIndents.PP += buyer.newIndents.PP;
+      totals.newIndents.GPT += buyer.newIndents.GPT;
+      totals.newIndents.SMS += buyer.newIndents.SMS;
+      totals.newIndents.Other += buyer.newIndents.Other;
+      totals.newIndents.total += buyer.newIndents.total;
+
+      // Sum today's output
+      totals.todaysOutput.Proto += todaysOutputByType.Proto;
+      totals.todaysOutput.Fit += todaysOutputByType.Fit;
+      totals.todaysOutput.PP += todaysOutputByType.PP;
+      totals.todaysOutput.GPT += todaysOutputByType.GPT;
+      totals.todaysOutput.SMS += todaysOutputByType.SMS;
+      totals.todaysOutput.Other += todaysOutputByType.Other;
+      totals.todaysOutput.total += buyer.todaysOutput;
+
+      // Sum total balances
+      totals.totalBalance.Proto += (buyer.openingBalance.Proto + buyer.newIndents.Proto - todaysOutputByType.Proto);
+      totals.totalBalance.Fit += (buyer.openingBalance.Fit + buyer.newIndents.Fit - todaysOutputByType.Fit);
+      totals.totalBalance.PP += (buyer.openingBalance.PP + buyer.newIndents.PP - todaysOutputByType.PP);
+      totals.totalBalance.GPT += (buyer.openingBalance.GPT + buyer.newIndents.GPT - todaysOutputByType.GPT);
+      totals.totalBalance.SMS += (buyer.openingBalance.SMS + buyer.newIndents.SMS - todaysOutputByType.SMS);
+      totals.totalBalance.Other += (buyer.openingBalance.Other + buyer.newIndents.Other - todaysOutputByType.Other);
+      totals.totalBalance.total += buyer.totalBalance;
+
+      // Sum tailors
+      totals.tailorsAllotted += buyer.tailorsAllotted;
+    });
+
+    // Add single totals row
+    const grandTotal = totals.openingBalance.total + totals.newIndents.total;
+    detailedData.push([
+      '',
+      'TOTALS',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totals.openingBalance.total.toString(),
+      totals.newIndents.total.toString(),
+      grandTotal.toString(),
+      totals.todaysOutput.total.toString(),
+      totals.totalBalance.total.toString(),
+      totals.tailorsAllotted.toString()
+    ]);
+
+    const detailedSheet = XLSX.utils.aoa_to_sheet(detailedData);
+    
+    // Apply formatting to all cells
+
+
+    XLSX.utils.book_append_sheet(workbook, detailedSheet, 'Daily Sampling Status');
+
+    // Generate filename with date and fabric category
+    const filename = `Daily_Sampling_Status_${selectedDate}_${fabricCategoryFilter}.xlsx`;
+
+    // Download the file
+    XLSX.writeFile(workbook, filename);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -293,6 +560,16 @@ export default function DailySamplingStatus() {
                   ))}
                 </div>
               </div>
+
+              {/* Download Excel Button */}
+              <button
+                onClick={downloadExcel}
+                disabled={loading}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                <Download size={18} />
+                <span>Export Excel</span>
+              </button>
             </div>
           </div>
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../lib/hooks/useAuth';
-import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard, TrendingUp, List, CheckCircle } from 'lucide-react';
+import { X, Home, Users, Calendar, Settings, FileText, Archive, BarChart, BarChart2, Clipboard, TrendingUp, List, CheckCircle, ClipboardList } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
@@ -60,6 +60,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
           <button onClick={() => handleNavigation('/daily-qc-output')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
             <CheckCircle size={18} className="inline-block mr-2" />
             Daily QC Output
+          </button>
+        )}
+        {canAccessDailyOutput && (
+          <button onClick={() => handleNavigation('/daily-qc-status')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-100">
+            <ClipboardList size={18} className="inline-block mr-2" />
+            Daily QC Status
           </button>
         )}
         <button 

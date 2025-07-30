@@ -11,6 +11,11 @@ interface ProductionOutput {
   CUT: number;
   SEW: number;
   FINISH: number;
+  inspected?: number;
+  pass?: number;
+  alter?: number;
+  passAlter?: number;
+  reject?: number;
 }
 
 const MasterExcelModal: React.FC<MasterExcelModalProps> = ({ onClose, samples }) => {
@@ -23,12 +28,24 @@ const MasterExcelModal: React.FC<MasterExcelModalProps> = ({ onClose, samples })
         acc.CUT = (acc.CUT || 0) + (output.CUT || 0);
         acc.SEW = (acc.SEW || 0) + (output.SEW || 0);
         acc.FINISH = (acc.FINISH || 0) + (output.FINISH || 0);
+        
+        // Accumulate QC data
+        acc.inspected = (acc.inspected || 0) + (output.inspected || 0);
+        acc.pass = (acc.pass || 0) + (output.pass || 0);
+        acc.alter = (acc.alter || 0) + (output.alter || 0);
+        acc.passAlter = (acc.passAlter || 0) + (output.passAlter || 0);
+        acc.reject = (acc.reject || 0) + (output.reject || 0);
       }
       return acc;
     }, {
       CUT: 0,
       SEW: 0,
-      FINISH: 0
+      FINISH: 0,
+      inspected: 0,
+      pass: 0,
+      alter: 0,
+      passAlter: 0,
+      reject: 0
     });
 
     const approvedConsumption = sample.noOfPieces && sample.requiredFabricQty
@@ -88,6 +105,12 @@ const MasterExcelModal: React.FC<MasterExcelModalProps> = ({ onClose, samples })
           'CUT': productionData.CUT || 0,
           'SEW': productionData.SEW || 0,
           'FINISH': productionData.FINISH || 0,
+          // QC Data
+          'QC Inspected': productionData.inspected || 0,
+          'QC Pass': productionData.pass || 0,
+          'QC Alter': productionData.alter || 0,
+          'QC Pass After Alter': productionData.passAlter || 0,
+          'QC Reject': productionData.reject || 0,
           // Consumption
           'Approved Consumption (m/pc)': productionData.approvedConsumption,
           'Actual Consumption (m/pc)': productionData.actualConsumption

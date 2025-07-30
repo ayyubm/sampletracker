@@ -18,9 +18,10 @@ import {
   FABRIC_CATEGORY_OPTIONS,
 } from "../lib/constants";
 import SampleForm from "./SampleForm";
-import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive, BarChart } from "lucide-react";
+import { Edit, Copy, Trash2, ArrowUp, ArrowDown, MessageSquare, Archive, BarChart, ClipboardCheck } from "lucide-react";
 import RemarkModal from "./RemarkModal";
 import ProductionSummaryModal from "./ProductionSummaryModal";
+import QCSummaryModal from "./QCSummaryModal";
 
 interface ChangeInfo {
   name: string;
@@ -172,6 +173,7 @@ const SampleList: React.FC<SampleListProps> = ({
   const [archiveConfirmation, setArchiveConfirmation] = useState<string | null>(null);
 
   const [selectedSampleForProduction, setSelectedSampleForProduction] = useState<string | null>(null);
+  const [selectedSampleForQC, setSelectedSampleForQC] = useState<string | null>(null);
 
   const [buyerSearch, setBuyerSearch] = useState("");
 
@@ -1091,6 +1093,13 @@ const SampleList: React.FC<SampleListProps> = ({
                         >
                           <BarChart size={18} />
                         </button>
+                        <button
+                          onClick={() => setSelectedSampleForQC(sample.sampleId)}
+                          className="text-teal-600 hover:text-teal-900"
+                          title="QC Summary"
+                        >
+                          <ClipboardCheck size={18} />
+                        </button>
                         {(userData?.isAdmin || userData?.team === 'Merchandising') && (
                           <button
                             onClick={(e) => handleArchive(e, sample.id)}
@@ -1219,6 +1228,12 @@ const SampleList: React.FC<SampleListProps> = ({
           <ProductionSummaryModal
             sampleId={selectedSampleForProduction}
             onClose={() => setSelectedSampleForProduction(null)}
+          />
+        )}
+        {selectedSampleForQC && (
+          <QCSummaryModal
+            sampleId={selectedSampleForQC}
+            onClose={() => setSelectedSampleForQC(null)}
           />
         )}
       </div>

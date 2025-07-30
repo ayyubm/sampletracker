@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { getDocuments } from '../lib/firebase/firebaseUtils';
 import { format, subDays } from 'date-fns';
-import { Menu } from 'lucide-react';
+import { Menu, Download } from 'lucide-react';
 import Sidebar from './Sidebar';
 import React from 'react';
+import * as XLSX from 'xlsx';
 
 interface Sample {
   id: string;

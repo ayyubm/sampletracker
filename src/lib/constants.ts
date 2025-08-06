@@ -21,7 +21,8 @@ export const SAMPLE_TYPE_OPTIONS = [
   'STUDIO SAMPLE',
   'FITTABLE COUNTER SAMPLE',
   'GLL',
-  'FLA'
+  'FLA',
+  'UNIT PRODUCTION'
 ];
 
 export const STATUS_OPTIONS = [

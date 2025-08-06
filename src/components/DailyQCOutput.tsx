@@ -251,14 +251,24 @@ export default function DailyQCOutput() {
   const handleQCOutputChange = (
     sampleId: string,
     field: keyof QCOutput,
-    value: string | number
+    value: string | number,
+    finishedPiecesCount: number
   ) => {
+    let processedValue = value;
+    
+    // For numeric fields, validate against finished pieces
+    if (field !== 'remark' && field !== 'qcName') {
+      const numValue = parseInt(value as string) || 0;
+      // Prevent values that exceed the finished pieces count
+      processedValue = Math.min(Math.max(0, numValue), finishedPiecesCount);
+    }
+    
     setSampleQCOutputs(prev => ({
       ...prev,
       [sampleId]: {
         ...prev[sampleId],
         sampleId,
-        [field]: field === 'remark' || field === 'qcName' ? value : (parseInt(value as string) || 0)
+        [field]: field === 'remark' || field === 'qcName' ? processedValue : processedValue
       }
     }));
   };
@@ -582,24 +592,28 @@ export default function DailyQCOutput() {
                               <td className="px-4 py-2 text-sm">
                                 {getStatusBadge(sample)}
                               </td>
-                              {(['inspected', 'pass', 'alter', 'passAlter', 'reject'] as const).map((field) => (
-                                <td key={field} className="px-4 py-2">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={finishedPieces[sample.sampleId] || 0}
-                                    value={sampleQCOutputs[sample.sampleId]?.[field] || 0}
-                                    onChange={(e) => handleQCOutputChange(
-                                      sample.sampleId,
-                                      field,
-                                      e.target.value
-                                    )}
-                                    onWheel={handleWheel}
-                                    className="w-16 border rounded-md p-1 text-sm"
-                                    disabled={!canSave || !hasFinishedPieces}
-                                  />
-                                </td>
-                              ))}
+                              {(['inspected', 'pass', 'alter', 'passAlter', 'reject'] as const).map((field) => {
+                                const finishedPiecesCount = finishedPieces[sample.sampleId] || 0;
+                                return (
+                                  <td key={field} className="px-4 py-2">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={finishedPiecesCount}
+                                      value={sampleQCOutputs[sample.sampleId]?.[field] || 0}
+                                      onChange={(e) => handleQCOutputChange(
+                                        sample.sampleId,
+                                        field,
+                                        e.target.value,
+                                        finishedPiecesCount
+                                      )}
+                                      onWheel={handleWheel}
+                                      className="w-16 border rounded-md p-1 text-sm"
+                                      disabled={!canSave || !hasFinishedPieces}
+                                    />
+                                  </td>
+                                );
+                              })}
                               <td className="px-4 py-2">
                                 <input
                                   type="text"
@@ -607,7 +621,8 @@ export default function DailyQCOutput() {
                                   onChange={(e) => handleQCOutputChange(
                                     sample.sampleId,
                                     'remark',
-                                    e.target.value
+                                    e.target.value,
+                                    finishedPieces[sample.sampleId] || 0
                                   )}
                                   className="w-32 border rounded-md p-1 text-sm"
                                   disabled={!canSave || !hasFinishedPieces}
@@ -621,7 +636,8 @@ export default function DailyQCOutput() {
                                   onChange={(e) => handleQCOutputChange(
                                     sample.sampleId,
                                     'qcName',
-                                    e.target.value
+                                    e.target.value,
+                                    finishedPieces[sample.sampleId] || 0
                                   )}
                                   className="w-32 border rounded-md p-1 text-sm"
                                   disabled={!canSave || !hasFinishedPieces}

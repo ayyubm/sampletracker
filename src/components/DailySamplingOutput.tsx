@@ -278,15 +278,19 @@ export default function DailySamplingOutput() {
   const handleSampleOutputChange = (
     sampleId: string,
     stage: keyof DailyOutput,
-    value: string
+    value: string,
+    pendingPieces: number
   ) => {
-    const numValue = parseInt(value) || 0;
+    const numValue = parseInt(value) || 0;    
+    // Prevent values that exceed the maximum allowed
+    const validatedValue = Math.min(Math.max(0, numValue), pendingPieces);
+    
     setSampleOutputs(prev => ({
       ...prev,
       [sampleId]: {
         ...prev[sampleId],
         sampleId,
-        [stage]: numValue
+        [stage]: validatedValue
       }
     }));
   };
@@ -642,24 +646,30 @@ export default function DailySamplingOutput() {
                             <td className="px-4 py-2 text-sm">
                               {getStatusBadge(sample)}
                             </td>
-                            {Object.keys(defaultDailyOutput).map((stage) => (
-                              <td key={stage} className="px-4 py-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={sample.noOfPieces}
-                                  value={sampleOutputs[sample.sampleId]?.[stage as keyof DailyOutput] || 0}
-                                  onChange={(e) => handleSampleOutputChange(
-                                    sample.sampleId,
-                                    stage as keyof DailyOutput,
-                                    e.target.value
-                                  )}
-                                  onWheel={handleWheel}
-                                  className="w-16 border rounded-md p-1 text-sm"
-                                  disabled={!canSave || (Number(sample.totalFabricQtyRecieved) === 0 || !sample.totalFabricQtyRecieved)}
-                                />
-                              </td>
-                            ))}
+                            {Object.keys(defaultDailyOutput).map((stage) => {
+                              const pendingPieces = Math.max(0, Number(sample.noOfPieces || 0) - (totalSewnPieces[sample.sampleId] || 0));
+
+                              
+                              return (
+                                <td key={stage} className="px-4 py-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={pendingPieces}
+                                    value={sampleOutputs[sample.sampleId]?.[stage as keyof DailyOutput] || 0}
+                                    onChange={(e) => handleSampleOutputChange(
+                                      sample.sampleId,
+                                      stage as keyof DailyOutput,
+                                      e.target.value,
+                                      pendingPieces
+                                    )}
+                                    onWheel={handleWheel}
+                                    className="w-16 border rounded-md p-1 text-sm"
+                                    disabled={!canSave || (Number(sample.totalFabricQtyRecieved) === 0 || !sample.totalFabricQtyRecieved)}
+                                  />
+                                </td>
+                              );
+                            })}
                           </tr>
                         ))}
                       </tbody>

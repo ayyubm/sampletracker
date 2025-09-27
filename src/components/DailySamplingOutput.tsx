@@ -17,6 +17,9 @@ interface Buyer {
   tailorCounts?: {
     [date: string]: number;
   };
+  tailorCountsKnit?: {
+    [date: string]: number;
+  };
 }
 
 interface Sample {
@@ -132,7 +135,8 @@ export default function DailySamplingOutput() {
   const [groupedSamples, setGroupedSamples] = useState<GroupedSamples>({});
   const [sampleOutputs, setSampleOutputs] = useState<{ [key: string]: SampleOutput }>({});
   const [isSaving, setIsSaving] = useState<{ [key: string]: boolean }>({});
-  const [tailorsAssigned, setTailorsAssigned] = useState<number>(0);
+  const [tailorsAssignedWoven, setTailorsAssignedWoven] = useState<number>(0);
+  const [tailorsAssignedKnit, setTailorsAssignedKnit] = useState<number>(0);
   const [isSavingTailors, setIsSavingTailors] = useState(false);
   const [totalSewnPieces, setTotalSewnPieces] = useState<{ [sampleId: string]: number }>({});
   const [alert, setAlert] = useState<{
@@ -154,9 +158,14 @@ export default function DailySamplingOutput() {
       if (selectedBuyer && selectedDate) {
         const selectedBuyerData = buyersData.find(b => b.buyerId === selectedBuyer);
         if (selectedBuyerData?.tailorCounts?.[selectedDate]) {
-          setTailorsAssigned(selectedBuyerData.tailorCounts[selectedDate]);
+          setTailorsAssignedWoven(selectedBuyerData.tailorCounts[selectedDate]);
         } else {
-          setTailorsAssigned(0);
+          setTailorsAssignedWoven(0);
+        }
+        if (selectedBuyerData?.tailorCountsKnit?.[selectedDate]) {
+          setTailorsAssignedKnit(selectedBuyerData.tailorCountsKnit[selectedDate]);
+        } else {
+          setTailorsAssignedKnit(0);
         }
       }
       setLoading(false);
@@ -375,7 +384,11 @@ export default function DailySamplingOutput() {
         await updateDocument('buyer', selectedBuyerDoc.id, {
           tailorCounts: {
             ...(selectedBuyerDoc.tailorCounts || {}),
-            [selectedDate]: tailorsAssigned
+            [selectedDate]: tailorsAssignedWoven
+          },
+          tailorCountsKnit: {
+            ...(selectedBuyerDoc.tailorCountsKnit || {}),
+            [selectedDate]: tailorsAssignedKnit
           }
         });
       }
@@ -397,9 +410,14 @@ export default function DailySamplingOutput() {
     }
   };
 
-  const handleTailorsChange = (value: string) => {
+  const handleTailorsWovenChange = (value: string) => {
     const numValue = parseInt(value) || 0;
-    setTailorsAssigned(numValue);
+    setTailorsAssignedWoven(numValue);
+  };
+
+  const handleTailorsKnitChange = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    setTailorsAssignedKnit(numValue);
   };
 
   const saveTailorsAssigned = async () => {
@@ -411,7 +429,11 @@ export default function DailySamplingOutput() {
       await updateDocument('buyer', selectedBuyerDoc.id, {
         tailorCounts: {
           ...(selectedBuyerDoc.tailorCounts || {}),
-          [selectedDate]: tailorsAssigned
+          [selectedDate]: tailorsAssignedWoven
+        },
+        tailorCountsKnit: {
+          ...(selectedBuyerDoc.tailorCountsKnit || {}),
+          [selectedDate]: tailorsAssignedKnit
         }
       });
 
@@ -530,24 +552,38 @@ export default function DailySamplingOutput() {
         )}
 
         {selectedBuyer && (
-          <div className="w-64">
+          <div className="w-96">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tailors Assigned
             </label>
-            <div className="flex space-x-2">
-              <input
-                type="number"
-                min="0"
-                value={tailorsAssigned}
-                onChange={(e) => handleTailorsChange(e.target.value)}
-                onWheel={handleWheel}
-                className="w-24 border rounded-md p-2"
-              />
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-600">Woven:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={tailorsAssignedWoven}
+                  onChange={(e) => handleTailorsWovenChange(e.target.value)}
+                  onWheel={handleWheel}
+                  className="w-20 border rounded-md p-2"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-600">Knit:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={tailorsAssignedKnit}
+                  onChange={(e) => handleTailorsKnitChange(e.target.value)}
+                  onWheel={handleWheel}
+                  className="w-20 border rounded-md p-2"
+                />
+              </div>
               {canSave && (
-              <Button
-                onClick={saveTailorsAssigned}
-                disabled={isSavingTailors}
-              >
+                <Button
+                  onClick={saveTailorsAssigned}
+                  disabled={isSavingTailors}
+                >
                   {isSavingTailors ? 'Saving...' : 'Save'}
                 </Button>
               )}

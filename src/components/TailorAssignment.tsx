@@ -12,6 +12,9 @@ interface Buyer {
   tailorCounts?: {
     [date: string]: number;
   };
+  tailorCountsKnit?: {
+    [date: string]: number;
+  };
 }
 
 interface TailorAssignmentProps {
@@ -25,6 +28,7 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   const [newDate, setNewDate] = useState<string>('');
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [fabricType, setFabricType] = useState<'Woven' | 'Knit'>('Woven');
   const { userData } = useAuth();
   useEffect(() => {
     onUnsavedChanges(hasUnsavedChanges);
@@ -47,6 +51,9 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
       if (buyer.tailorCounts) {
         Object.keys(buyer.tailorCounts).forEach(date => allDates.add(date));
       }
+      if (buyer.tailorCountsKnit) {
+        Object.keys(buyer.tailorCountsKnit).forEach(date => allDates.add(date));
+      }
     });
     return Array.from(allDates).sort();
   };
@@ -62,10 +69,17 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
 
   const handleCountChange = (buyerIndex: number, date: string, value: string) => {
     const updatedBuyers = [...buyers];
-    if (!updatedBuyers[buyerIndex].tailorCounts) {
-      updatedBuyers[buyerIndex].tailorCounts = {};
+    if (fabricType === 'Woven') {
+      if (!updatedBuyers[buyerIndex].tailorCounts) {
+        updatedBuyers[buyerIndex].tailorCounts = {};
+      }
+      updatedBuyers[buyerIndex].tailorCounts[date] = parseInt(value) || 0;
+    } else {
+      if (!updatedBuyers[buyerIndex].tailorCountsKnit) {
+        updatedBuyers[buyerIndex].tailorCountsKnit = {};
+      }
+      updatedBuyers[buyerIndex].tailorCountsKnit[date] = parseInt(value) || 0;
     }
-    updatedBuyers[buyerIndex].tailorCounts[date] = parseInt(value) || 0;
     setBuyers(updatedBuyers);
     setHasUnsavedChanges(true);
   };
@@ -74,7 +88,10 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
     try {
       for (const buyer of buyers) {
         if (buyer.id) {
-          await updateDocument('buyer', buyer.id, { tailorCounts: buyer.tailorCounts || {} });
+          await updateDocument('buyer', buyer.id, { 
+            tailorCounts: buyer.tailorCounts || {},
+            tailorCountsKnit: buyer.tailorCountsKnit || {}
+          });
         }
       }
       setAlert({ message: 'Tailor counts saved successfully', type: 'success' });
@@ -91,6 +108,10 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
       tailorCounts: buyer.tailorCounts ? 
         Object.fromEntries(
           Object.entries(buyer.tailorCounts).filter(([date]) => date !== dateToDelete)
+        ) : {},
+      tailorCountsKnit: buyer.tailorCountsKnit ? 
+        Object.fromEntries(
+          Object.entries(buyer.tailorCountsKnit).filter(([date]) => date !== dateToDelete)
         ) : {}
     }));
 
@@ -107,27 +128,45 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
   return (
     <div className="w-full px-4">
       <div className="mb-4 flex justify-between items-center">
-        {userData?.team != 'Viewer' && (
-          <div className="flex items-center space-x-4">
-            <input
-              type="date"
-              value={newDate}
-              onChange={(e) => setNewDate(e.target.value)}
-              className="p-2 border rounded"
-          />
-          <button
-            onClick={addNewDate}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Add New Date
-          </button>
-          <button
-            onClick={saveTailorCounts}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Save Assignments
-          </button>
-        </div>)}
+        <div className="flex items-center space-x-4">
+          <div className="flex space-x-1">
+            {(['Woven', 'Knit'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setFabricType(type)}
+                className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                  fabricType === type
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          {userData?.team != 'Viewer' && (
+            <>
+              <input
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                className="p-2 border rounded"
+              />
+              <button
+                onClick={addNewDate}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Add New Date
+              </button>
+              <button
+                onClick={saveTailorCounts}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Save Assignments
+              </button>
+            </>
+          )}
+        </div>
       </div>
       {alert && (
         <Alert
@@ -142,7 +181,9 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
             <table className="w-full bg-white">
               <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal sticky top-0 z-20">
                 <tr>
-                  <th className="w-48 py-3 px-2 text-left sticky left-0 z-30 bg-gray-200">Buyer</th>
+                  <th className="w-48 py-3 px-2 text-left sticky left-0 z-30 bg-gray-200">
+                    Buyer ({fabricType} Tailors)
+                  </th>
                   {getReversedDates().map(date => (
                     <th key={date} className="py-3 px-1 text-center text-xs" style={{ minWidth: '8rem' }}>
                       <div className="flex items-center justify-center">
@@ -170,9 +211,10 @@ const TailorAssignment: React.FC<TailorAssignmentProps> = ({ topControls = false
                         <input
                           type="number"
                           min="0"
-                          value={buyer.tailorCounts?.[date] || 0}
+                          value={fabricType === 'Woven' ? (buyer.tailorCounts?.[date] || 0) : (buyer.tailorCountsKnit?.[date] || 0)}
                           onChange={(e) => handleCountChange(index, date, e.target.value)}
                           className="w-full text-center border rounded-md p-1"
+                          disabled={userData?.team === 'Viewer'}
                         />
                       </td>
                     ))}

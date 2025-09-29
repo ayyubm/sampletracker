@@ -34,6 +34,9 @@ interface Buyer {
   tailorCounts?: {
     [date: string]: number;
   };
+  tailorCountsKnit?: {
+    [date: string]: number;
+  };
 }
 
 interface StoredSampleOutput {
@@ -72,7 +75,8 @@ interface BuyerStatusData {
   };
   todaysOutput: number;
   totalBalance: number;
-  tailorsAllotted: number;
+  tailorsAllottedWoven: number;
+  tailorsAllottedKnit: number;
 }
 
 interface DailySummary {
@@ -139,7 +143,8 @@ export default function DailySamplingStatus() {
               },
               todaysOutput: 0,
               totalBalance: 0,
-              tailorsAllotted: buyer.tailorCounts?.[selectedDate] || 0
+              tailorsAllottedWoven: buyer.tailorCounts?.[selectedDate] || 0,
+              tailorsAllottedKnit: buyer.tailorCountsKnit?.[selectedDate] || 0
             };
 
             // Calculate opening balance and new indents
@@ -178,9 +183,12 @@ export default function DailySamplingStatus() {
             if (todaysOutput) {
               status.todaysOutput = Object.entries(todaysOutput.outputs)
                 .reduce((sum, [sampleId, output]) => {
-                  // Only count outputs for samples that still exist
+                  // Only count outputs for samples that still exist and match fabric category filter
                   if (existingSampleIds.has(sampleId)) {
-                    return sum + (output.SEW || 0);
+                    const sample = samples.find(s => s.sampleId === sampleId);
+                    if (sample && (fabricCategoryFilter === 'All' || sample.fabricCategory === fabricCategoryFilter)) {
+                      return sum + (output.SEW || 0);
+                    }
                   }
                   return sum;
                 }, 0);
@@ -195,12 +203,22 @@ export default function DailySamplingStatus() {
           })
         );
 
-        const filteredStatusData = buyerStatusData.filter(data => 
-          data.openingBalance.total > 0 || 
-          data.newIndents.total > 0 || 
-          data.todaysOutput > 0 ||
-          data.tailorsAllotted > 0
-        );
+        const filteredStatusData = buyerStatusData.filter(data => {
+          // For specific fabric categories (Knit/Woven), hide buyers with 0 total pending
+          if (fabricCategoryFilter === 'Knit' || fabricCategoryFilter === 'Woven') {
+            const totalPending = data.openingBalance.total + data.newIndents.total;
+            if (totalPending === 0) {
+              return false;
+            }
+          }
+          
+          // Original filtering logic
+          return data.openingBalance.total > 0 || 
+                 data.newIndents.total > 0 || 
+                 data.todaysOutput > 0 ||
+                 data.tailorsAllottedWoven > 0 ||
+                 data.tailorsAllottedKnit > 0;
+        });
 
         setStatusData(filteredStatusData);
 
@@ -209,7 +227,16 @@ export default function DailySamplingStatus() {
           acc.totalOpeningBalance += buyer.openingBalance.total;
           acc.totalNewIndents += buyer.newIndents.total;
           acc.totalOutput += buyer.todaysOutput;
-          acc.totalTailors += buyer.tailorsAllotted;
+          
+          // Add tailors based on fabric category filter
+          if (fabricCategoryFilter === 'All') {
+            acc.totalTailors += buyer.tailorsAllottedWoven + buyer.tailorsAllottedKnit;
+          } else if (fabricCategoryFilter === 'Woven') {
+            acc.totalTailors += buyer.tailorsAllottedWoven;
+          } else if (fabricCategoryFilter === 'Knit') {
+            acc.totalTailors += buyer.tailorsAllottedKnit;
+          }
+          
           return acc;
         }, {
           totalOpeningBalance: 0,
@@ -276,7 +303,8 @@ export default function DailySamplingStatus() {
         'Total',
         'Today\'s Output',
         'Total Balance',
-        'Tailors Allotted'
+        fabricCategoryFilter === 'All' ? 'Total Tailors' : 
+        fabricCategoryFilter === 'Woven' ? 'Woven Tailors' : 'Knit Tailors'
       ],
       ['']
     ];
@@ -377,6 +405,12 @@ export default function DailySamplingStatus() {
       ]);
 
       // Today's Output row
+      const tailorCount = fabricCategoryFilter === 'All' 
+        ? buyer.tailorsAllottedWoven + buyer.tailorsAllottedKnit
+        : fabricCategoryFilter === 'Woven' 
+        ? buyer.tailorsAllottedWoven 
+        : buyer.tailorsAllottedKnit;
+      
       detailedData.push([
         '',
         '',
@@ -392,7 +426,7 @@ export default function DailySamplingStatus() {
         '',
         buyer.todaysOutput.toString(),
         '',
-        buyer.tailorsAllotted.toString()
+        tailorCount.toString()
       ]);
 
       // Total Balance row
@@ -418,6 +452,7 @@ export default function DailySamplingStatus() {
         '',
         '',
         buyer.totalBalance.toString(),
+        '',
         ''
       ]);
 
@@ -431,7 +466,7 @@ export default function DailySamplingStatus() {
       newIndents: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
       todaysOutput: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
       totalBalance: { Proto: 0, Fit: 0, PP: 0, GPT: 0, SMS: 0, Other: 0, total: 0 },
-      tailorsAllotted: 0
+      totalTailors: 0
     };
 
     statusData.forEach(buyer => {
@@ -475,8 +510,14 @@ export default function DailySamplingStatus() {
       totals.totalBalance.Other += (buyer.openingBalance.Other + buyer.newIndents.Other - todaysOutputByType.Other);
       totals.totalBalance.total += buyer.totalBalance;
 
-      // Sum tailors
-      totals.tailorsAllotted += buyer.tailorsAllotted;
+      // Sum tailors based on fabric category filter
+      if (fabricCategoryFilter === 'All') {
+        totals.totalTailors += buyer.tailorsAllottedWoven + buyer.tailorsAllottedKnit;
+      } else if (fabricCategoryFilter === 'Woven') {
+        totals.totalTailors += buyer.tailorsAllottedWoven;
+      } else if (fabricCategoryFilter === 'Knit') {
+        totals.totalTailors += buyer.tailorsAllottedKnit;
+      }
     });
 
     // Add single totals row
@@ -496,7 +537,7 @@ export default function DailySamplingStatus() {
       grandTotal.toString(),
       totals.todaysOutput.total.toString(),
       totals.totalBalance.total.toString(),
-      totals.tailorsAllotted.toString()
+      totals.totalTailors.toString()
     ]);
 
     const detailedSheet = XLSX.utils.aoa_to_sheet(detailedData);
@@ -600,7 +641,10 @@ export default function DailySamplingStatus() {
                 <div className="text-xl font-bold text-blue-600">{dailySummary.totalBalance}</div>
               </div>
               <div className="bg-white p-3 rounded-lg shadow">
-                <div className="text-sm text-gray-500">Total Tailors</div>
+                <div className="text-sm text-gray-500">
+                  {fabricCategoryFilter === 'All' ? 'Total Tailors' : 
+                   fabricCategoryFilter === 'Woven' ? 'Woven Tailors' : 'Knit Tailors'}
+                </div>
                 <div className="text-xl font-bold">{dailySummary.totalTailors}</div>
               </div>
               <div className="bg-white p-3 rounded-lg shadow">
@@ -619,8 +663,28 @@ export default function DailySamplingStatus() {
             <div key={buyer.buyerId} className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">{buyer.buyerName}</h2>
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                  {buyer.tailorsAllotted} Tailors
+                <div className="flex gap-2">
+                  {(() => {
+                    let tailorCount = 0;
+                    let tailorLabel = '';
+                    
+                    if (fabricCategoryFilter === 'All') {
+                      tailorCount = buyer.tailorsAllottedWoven + buyer.tailorsAllottedKnit;
+                      tailorLabel = 'Total Tailors';
+                    } else if (fabricCategoryFilter === 'Woven') {
+                      tailorCount = buyer.tailorsAllottedWoven;
+                      tailorLabel = 'Woven Tailors';
+                    } else if (fabricCategoryFilter === 'Knit') {
+                      tailorCount = buyer.tailorsAllottedKnit;
+                      tailorLabel = 'Knit Tailors';
+                    }
+                    
+                    return tailorCount > 0 ? (
+                      <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                        {tailorCount} {tailorLabel}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
